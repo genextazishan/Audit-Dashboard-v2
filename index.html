@@ -618,7 +618,7 @@ const INBOUND_MAP = {
 //   result:HL(219)  rtcPass:HO(222)  rtcFail:HP(223)  skill:HQ(224)  party:HU(228)
 //   month: derived from date column A(0)
 const DIGITAL_MAP = {
-  date:0, result:219, skill:224, party:228, agentId:215, tl:216,
+  date:0, result:219, skill:224, party:'Audit Party', agentId:215, tl:216,
   empPass:217, empFail:218,
   rtcPass:222, rtcFail:223,
   month:null,                    // null = derive from date column
@@ -912,33 +912,45 @@ function parseDateToMonth(val) {
 // ═══════════════════════════════════════════
 function parseRows(grid, map, channel, fileMonth, fileYear, defaultParty) {
   const rows = [];
+
+  // Resolve any string-keyed columns (header name → column index) using row 0
+  const header = grid[0] || [];
+  const map2 = Object.assign({}, map);
+  for (const key of Object.keys(map2)) {
+    if (typeof map2[key] === 'string') {
+      const colName = map2[key];
+      const found = header.findIndex(h => String(h || '').trim().toLowerCase() === colName.toLowerCase());
+      map2[key] = found >= 0 ? found : null;
+    }
+  }
+
   // Compute the minimum required column index from the map so sparse CSVs
   // (where trailing empty columns are stripped) are not wrongly rejected.
   const minRequiredCol = Math.max(
-    map.agentId, map.result, map.skill,
-    map.empPass || 0, map.empFail || 0,
-    map.rtcPass || 0, map.rtcFail || 0
+    map2.agentId, map2.result, map2.skill,
+    map2.empPass || 0, map2.empFail || 0,
+    map2.rtcPass || 0, map2.rtcFail || 0
   );
   // Row 0 is the header — skip it, start at 1
   for (let i = 1; i < grid.length; i++) {
     const row = grid[i];
     if (!row || row.length < minRequiredCol) continue;
 
-    const agentId = String(row[map.agentId] || '').trim();
+    const agentId = String(row[map2.agentId] || '').trim();
     if (!agentId) continue;
 
-    const skillRaw = String(row[map.skill] || '').trim();
+    const skillRaw = String(row[map2.skill] || '').trim();
     const skill    = normalizeSkill(skillRaw);
     if (!skill) continue;
 
-    const resultRaw = String(row[map.result] || '').trim().toLowerCase();
+    const resultRaw = String(row[map2.result] || '').trim().toLowerCase();
     const result    = resultRaw === 'pass' ? 'Pass' : resultRaw === 'fail' ? 'Fail' : null;
     if (!result) continue;
 
     // Party: use column if available, else use defaultParty
     let party = defaultParty || null;
-    if (map.party !== undefined && map.party !== null) {
-      const partyVal = map.party < row.length ? String(row[map.party] || '') : '';
+    if (map2.party !== undefined && map2.party !== null) {
+      const partyVal = map2.party < row.length ? String(row[map2.party] || '') : '';
       const p = normalizeParty(partyVal);
       if (p) party = p;
     }
@@ -951,8 +963,8 @@ function parseRows(grid, map, channel, fileMonth, fileYear, defaultParty) {
     // from other months — filtering here prevents double-counting when "All Months"
     // is selected (the 21128 vs 21613 discrepancy).
     let month = null;
-    if (map.month !== null && map.month !== undefined) {
-      const mRaw = String(row[map.month] || '').trim();
+    if (map2.month !== null && map2.month !== undefined) {
+      const mRaw = String(row[map2.month] || '').trim();
       if (!mRaw) continue;
       month = mRaw;
       // Enforce fileMonth match (case-insensitive)
@@ -960,8 +972,8 @@ function parseRows(grid, map, channel, fileMonth, fileYear, defaultParty) {
     } else {
       // Derive month from date in column A (0), with optional fallback column
       let rawDate = row[0];
-      if ((!rawDate || String(rawDate).trim() === '') && map.dateFallback !== undefined) {
-        rawDate = row[map.dateFallback];
+      if ((!rawDate || String(rawDate).trim() === '') && map2.dateFallback !== undefined) {
+        rawDate = row[map2.dateFallback];
       }
       const derived = parseDateToMonth(rawDate);
       if (!derived) continue; // skip rows with no parseable date
@@ -973,14 +985,14 @@ function parseRows(grid, map, channel, fileMonth, fileYear, defaultParty) {
 
     const year = fileYear;
 
-    const empPass = Number(row[map.empPass]) || 0;
-    const empFail = Number(row[map.empFail]) || 0;
+    const empPass = Number(row[map2.empPass]) || 0;
+    const empFail = Number(row[map2.empFail]) || 0;
 
     // RTC: if map has explicit columns use them; otherwise derive from result
     let rtcPass, rtcFail;
-    if (map.rtcPass !== null && map.rtcPass !== undefined) {
-      rtcPass = Number(row[map.rtcPass]) || 0;
-      rtcFail = Number(row[map.rtcFail]) || 0;
+    if (map2.rtcPass !== null && map2.rtcPass !== undefined) {
+      rtcPass = Number(row[map2.rtcPass]) || 0;
+      rtcFail = Number(row[map2.rtcFail]) || 0;
     } else {
       // No dedicated RTC columns — treat CE Pass/Fail as RTC proxy (matches original)
       rtcPass = result === 'Pass' ? 1 : 0;
@@ -988,11 +1000,11 @@ function parseRows(grid, map, channel, fileMonth, fileYear, defaultParty) {
     }
 
     const ceParams = {}, empParams = {};
-    Object.entries(map.ce).forEach(([k, ci]) => {
+    Object.entries(map2.ce).forEach(([k, ci]) => {
       const v = ci < row.length ? String(row[ci] || '').trim().toLowerCase() : '';
       ceParams[k] = v === 'pass' ? 'Pass' : v === 'fail' ? 'Fail' : null;
     });
-    Object.entries(map.emp).forEach(([k, ci]) => {
+    Object.entries(map2.emp).forEach(([k, ci]) => {
       const v = ci < row.length ? String(row[ci] || '').trim().toLowerCase() : '';
       empParams[k] = v === 'pass' ? 'Pass' : v === 'fail' ? 'Fail' : null;
     });
@@ -1001,7 +1013,7 @@ function parseRows(grid, map, channel, fileMonth, fileYear, defaultParty) {
       month, year, party, skill,
       channel: skill === 'Tier_Whatsapp' ? 'Inbound' : channel,
       agentId,
-      tl: String(row[map.tl] || '').trim(),
+      tl: String(row[map2.tl] || '').trim(),
       result,
       empPass, empFail,
       ce:     result === 'Pass' ? 100 : 0,
