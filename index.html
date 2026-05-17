@@ -334,17 +334,43 @@ tr.drilldown-row td:first-child{padding-left:40px;color:var(--text-muted)}
 
 <!-- FILTER BAR -->
 <div class="filter-bar">
-  <div class="filter-group">
+  <div class="filter-group" style="position:relative">
     <span class="filter-label">Month</span>
-    <select class="filter-select" id="fMonth" onchange="applyFilters()" style="min-width:160px">
-      <option value="all">🗓️ All Months</option>
-      <option value="January">January</option><option value="February">February</option>
-      <option value="March">March</option><option value="April">April</option>
-      <option value="May">May</option><option value="June">June</option>
-      <option value="July">July</option><option value="August">August</option>
-      <option value="September">September</option><option value="October">October</option>
-      <option value="November">November</option><option value="December">December</option>
-    </select>
+    <div id="monthMultiWrap" style="position:relative;min-width:160px">
+      <button id="monthDropBtn" onclick="toggleMonthDrop(event)" style="
+        background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-sm);
+        padding:6px 30px 6px 12px;font-size:0.82rem;color:var(--text-primary);cursor:pointer;
+        outline:none;transition:var(--transition);min-width:160px;text-align:left;width:100%;
+        white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative;
+      ">🗓️ All Months
+        <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;font-size:0.65rem;color:var(--text-muted)">▼</span>
+      </button>
+      <div id="monthDropPanel" style="
+        display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:500;
+        background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-md);
+        min-width:180px;max-height:320px;overflow-y:auto;box-shadow:var(--shadow-lg);padding:6px 0;
+      ">
+        <div style="padding:6px 12px 4px;border-bottom:1px solid var(--border-muted);display:flex;gap:8px">
+          <button onclick="selectAllMonths()" style="flex:1;padding:3px 8px;border-radius:6px;border:1px solid var(--blue);background:var(--blue-dim);color:var(--blue);font-size:0.72rem;font-weight:600;cursor:pointer;">All</button>
+          <button onclick="clearAllMonths()" style="flex:1;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:0.72rem;font-weight:600;cursor:pointer;">None</button>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;padding:7px 14px;cursor:pointer;font-size:0.82rem;border-bottom:1px solid var(--border-muted)" onclick="event.stopPropagation()">
+          <input type="checkbox" id="monthOpt_all" onchange="onMonthAllToggle(this)" checked style="accent-color:var(--blue)"> All Months
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="month-chk" value="January"   onchange="onMonthChkChange()" style="accent-color:var(--blue)"> January</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="month-chk" value="February"  onchange="onMonthChkChange()" style="accent-color:var(--blue)"> February</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="month-chk" value="March"     onchange="onMonthChkChange()" style="accent-color:var(--blue)"> March</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="month-chk" value="April"     onchange="onMonthChkChange()" style="accent-color:var(--blue)"> April</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="month-chk" value="May"       onchange="onMonthChkChange()" style="accent-color:var(--blue)"> May</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="month-chk" value="June"      onchange="onMonthChkChange()" style="accent-color:var(--blue)"> June</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="month-chk" value="July"      onchange="onMonthChkChange()" style="accent-color:var(--blue)"> July</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="month-chk" value="August"    onchange="onMonthChkChange()" style="accent-color:var(--blue)"> August</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="month-chk" value="September" onchange="onMonthChkChange()" style="accent-color:var(--blue)"> September</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="month-chk" value="October"   onchange="onMonthChkChange()" style="accent-color:var(--blue)"> October</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="month-chk" value="November"  onchange="onMonthChkChange()" style="accent-color:var(--blue)"> November</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="month-chk" value="December"  onchange="onMonthChkChange()" style="accent-color:var(--blue)"> December</label>
+      </div>
+    </div>
   </div>
   <div class="filter-sep"></div>
   <div class="filter-group">
@@ -1150,13 +1176,14 @@ function updateDataStatusBar() {
 //  FILTERS
 // ═══════════════════════════════════════════
 function clearFilters() {
-  ['fMonth','fParty','fChannel','fResult','fYear'].forEach(id => document.getElementById(id).value = 'all');
+  ['fParty','fChannel','fResult','fYear'].forEach(id => document.getElementById(id).value = 'all');
   document.getElementById('fSearch').value = '';
+  selectAllMonths();
   selectAllSkills();
 }
 
 function applyFilters() {
-  const month   = document.getElementById('fMonth').value;
+  const selectedMonths = getSelectedMonths();
   const year    = document.getElementById('fYear').value;
   const party   = document.getElementById('fParty').value;
   const channel = document.getElementById('fChannel').value;
@@ -1165,7 +1192,7 @@ function applyFilters() {
   const selectedSkills = getSelectedSkills();
 
   filteredRows = rawRows.filter(r =>
-    (month   === 'all' || r.month   === month)   &&
+    (selectedMonths === null || selectedMonths.has(r.month)) &&
     (year    === 'all' || r.year    === year)     &&
     (party   === 'all' || r.party   === party)   &&
     (channel === 'all' || r.channel === channel) &&
@@ -1641,6 +1668,68 @@ function showToast(msg,type='') {
 }
 
 // ═══════════════════════════════════════════
+//  MONTH MULTI-SELECT
+// ═══════════════════════════════════════════
+function toggleMonthDrop(e) {
+  e.stopPropagation();
+  const panel = document.getElementById('monthDropPanel');
+  const btn   = document.getElementById('monthDropBtn');
+  const open  = panel.style.display === 'block';
+  panel.style.display = open ? 'none' : 'block';
+  btn.style.borderColor = open ? 'var(--border)' : 'var(--blue)';
+}
+// (click-outside handled by shared listener below)
+function getSelectedMonths() {
+  const allChk = document.getElementById('monthOpt_all');
+  if (allChk && allChk.checked) return null; // null = all months
+  const checked = [...document.querySelectorAll('.month-chk:checked')].map(c => c.value);
+  return checked.length ? new Set(checked) : null;
+}
+function updateMonthDropBtn() {
+  const allChk  = document.getElementById('monthOpt_all');
+  const checked = [...document.querySelectorAll('.month-chk:checked')];
+  const total   = document.querySelectorAll('.month-chk').length;
+  const btn     = document.getElementById('monthDropBtn');
+  if (!btn) return;
+  if ((allChk && allChk.checked) || checked.length === total) {
+    btn.childNodes[0].textContent = '🗓️ All Months';
+  } else if (checked.length === 0) {
+    btn.childNodes[0].textContent = 'No Months';
+  } else if (checked.length === 1) {
+    btn.childNodes[0].textContent = checked[0].value;
+  } else {
+    btn.childNodes[0].textContent = `${checked.length} Months`;
+  }
+}
+function onMonthAllToggle(chkEl) {
+  document.querySelectorAll('.month-chk').forEach(c => c.checked = false);
+  updateMonthDropBtn();
+  applyFilters();
+}
+function onMonthChkChange() {
+  const allChk = document.getElementById('monthOpt_all');
+  if (allChk) allChk.checked = false;
+  const checked = [...document.querySelectorAll('.month-chk:checked')];
+  const total   = document.querySelectorAll('.month-chk').length;
+  if (checked.length === total && allChk) allChk.checked = true;
+  updateMonthDropBtn();
+  applyFilters();
+}
+function selectAllMonths() {
+  const allChk = document.getElementById('monthOpt_all');
+  if (allChk) allChk.checked = true;
+  document.querySelectorAll('.month-chk').forEach(c => c.checked = false);
+  updateMonthDropBtn();
+  applyFilters();
+}
+function clearAllMonths() {
+  const allChk = document.getElementById('monthOpt_all');
+  if (allChk) allChk.checked = false;
+  document.querySelectorAll('.month-chk').forEach(c => c.checked = false);
+  updateMonthDropBtn();
+}
+
+// ═══════════════════════════════════════════
 //  SKILL MULTI-SELECT
 // ═══════════════════════════════════════════
 function toggleSkillDrop(e) {
@@ -1652,6 +1741,14 @@ function toggleSkillDrop(e) {
   btn.style.borderColor = open ? 'var(--border)' : 'var(--blue)';
 }
 document.addEventListener('click', () => {
+  // Close month dropdown
+  const mPanel = document.getElementById('monthDropPanel');
+  const mBtn   = document.getElementById('monthDropBtn');
+  if (mPanel && mPanel.style.display === 'block') {
+    mPanel.style.display = 'none';
+    if (mBtn) mBtn.style.borderColor = 'var(--border)';
+  }
+  // Close skill dropdown
   const panel = document.getElementById('skillDropPanel');
   const btn   = document.getElementById('skillDropBtn');
   if (panel && panel.style.display === 'block') {
