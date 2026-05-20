@@ -433,6 +433,8 @@ tr.drilldown-row td:first-child{padding-left:40px;color:var(--text-muted)}
         <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="GPFI &amp; ALO" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> GPFI &amp; ALO</label>
         <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="Tier_Whatsapp" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> Tier_Whatsapp</label>
         <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="Skitto_121" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> Skitto_121</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="Complaint Management" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> Complaint Management</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="Outbound" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> Outbound</label>
         <div style="padding:4px 14px 2px;font-size:0.65rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.8px;border-top:1px solid var(--border-muted);margin-top:2px">Digital</div>
         <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="Live Chat" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> Live Chat</label>
         <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="Email" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> Email</label>
@@ -605,6 +607,7 @@ const DATA_BRANCH  = 'main';
 const TGT = {
   'Mass':98,'Premium':98.5,'KCP':99,'Retailer':99,'158':99,'HR Helpline':99,
   'RM':99,'Second Tier':99,'Tier_Whatsapp':99,'Skitto_121':99,
+  'Complaint Management':99,'Outbound':99,
   'Live Chat':98,'Email':99,'Social Media':99,'GPFI & ALO':99,
   'Skitto_Email':99,'Skitto_Messenger':99,'Skitto_Social Media':99,'Whatsapp':99
 };
@@ -726,6 +729,127 @@ const RM_MAP = {
   }
 };
 
+// CM_DUMP (Complaint Management) columns (0-based):
+//   date:A(0)   agentId:GY(200) "Agent/VDI ID"   agentName:GY→GY col, but agentId col I(8)
+//   Wait — per brief: I has Agent/VDI ID, GY has Agent names, GZ has TL names, HC has Audit Party
+//   I=col 8, GY=col 206, GZ=col 207, HC=col 212 (0-based, A=0)
+//   Empathy (Pass/Fail):
+//     AI=Proactive Greeting(34), AL=Complaint Ack(39), AO=Speech Clarity(40),
+//     AR=Proper Listening(43), AU=Time/Hold Mgt(46), AX=Personalization(49),
+//     BA=Emotional Tone(52), BD=Closing Courtesy(55)
+//   Critical Error (Pass/Fail):
+//     BJ=Identification(61), BM=Information(64), BP=Execution(67),
+//     BV=Misbehave(73), BY=Improper Response(76), CB=Unnecc Hold(79),
+//     CE=Unusual Hangup(82), CK=Unauth Execution(88), CN=Unauth Info(91),
+//     CQ=Verification(93), CT=Access Sharing(97),
+//     CZ=CC Product(103), DC=CC Process(106), DF=CC Info(109), DI=CC System(111), DL=Sys/Tool Perf(113)
+//   GR=Total Empathy Pass(194), GS=Total Empathy Fail(195)
+//   GU=CE Pass Count(198), GV=CE Fail Count(199)
+//   GW=RTC Pass(200), GX=RTC Fail(201)
+//   result derived from GU/GV: if ceFailCount==0 → Pass, else Fail
+const CM_MAP = {
+  date:0, result:null,              // result derived from CE pass/fail counts
+  skill:null,                        // fixed skill = 'Complaint Management'
+  party:210,                         // HC: H=7→(7+1)*26+C(2)=210
+  agentId:8,                         // col I (0-based)
+  tl:207,                            // col GZ: G=6→(6+1)*26+Z(25)=207
+  empPass:199,                       // col GR: G=6→(6+1)*26+R(17)=199
+  empFail:200,                       // col GS: (6+1)*26+S(18)=200
+  cePass:202,                        // col GU: (6+1)*26+U(20)=202
+  ceFail:203,                        // col GV: (6+1)*26+V(21)=203
+  rtcPass:204,                       // col GW: (6+1)*26+W(22)=204
+  rtcFail:205,                       // col GX: (6+1)*26+X(23)=205
+  month:null,                        // derive from date col A(0)
+  emp:{
+    'Proactive Greeting':34,         // AI: A(0+1)*26+I(8)=34
+    'Complaint Ack & Clarification':37, // AL: (0+1)*26+L(11)=37
+    'Speech Clarity':40,             // AO: (0+1)*26+O(14)=40
+    'Proper Listening':43,           // AR: (0+1)*26+R(17)=43
+    'Time/Hold Mgt':46,              // AU: (0+1)*26+U(20)=46
+    'Personalization':49,            // AX: (0+1)*26+X(23)=49
+    'Emotional Tone':52,             // BA: B(1+1)*26+A(0)=52
+    'Closing Courtesy':55            // BD: (1+1)*26+D(3)=55
+  },
+  ce:{
+    'Identification':61,             // BJ: (1+1)*26+J(9)=61
+    'Information':64,                // BM: (1+1)*26+M(12)=64
+    'Execution':67,                  // BP: (1+1)*26+P(15)=67
+    'Misbehave':73,                  // BV: (1+1)*26+V(21)=73
+    'Improper Response':76,          // BY: (1+1)*26+Y(24)=76
+    'Unnecessary Hold':79,           // CB: (2+1)*26+B(1)=79
+    'Unusual Hangup':82,             // CE: (2+1)*26+E(4)=82
+    'Unauth Execution':88,           // CK: (2+1)*26+K(10)=88
+    'Unauth Info Shared':91,         // CN: (2+1)*26+N(13)=91
+    'Verification Not Followed':94,  // CQ: (2+1)*26+Q(16)=94
+    'Access Sharing':97,             // CT: (2+1)*26+T(19)=97
+    'CC Product':103,                // CZ: (2+1)*26+Z(25)=103
+    'CC Process':106,                // DC: (3+1)*26+C(2)=106
+    'CC Information':109,            // DF: (3+1)*26+F(5)=109
+    'CC System':112,                 // DI: (3+1)*26+I(8)=112
+    'Sys/Tool Performance':115       // DL: (3+1)*26+L(11)=115
+  }
+};
+// OUTBOUND_DUMP columns (0-based):
+//   date:A(0)   agentId:GG(188)  agentName:GH(189)  tl:GI(190)
+//   skill col: GM(194) — but all Outbound → 'Outbound'
+//   party: GX(205)
+//   Empathy (Pass/Fail):
+//     AC(28) Proactive Greeting, AF(31) Ack & Clarification,
+//     AI(34) Speech Clarity, AL(37) Proper Listening,
+//     AO(40) Time/Hold Mgt, AR(43) Personalization,
+//     AU(46) Emotional Tone, AX(49) Closing Courtesy
+//   Critical Error (Pass/Fail):
+//     BD(55) Identification, BG(58) Information, BJ(61) Execution,
+//     BP(67) Misbehave, BS(70) Improper Resp, BV(73) Unnecessary Hold,
+//     BY(76) Unusual Hangup, CE(82) Unauth Execution, CH(85) Unauth Info,
+//     CK(88) Verification, CN(91) Access Sharing,
+//     CT(97) CC Product, CW(100) CC Process, CZ(103) CC Info, DC(108) CC System, DF(111) Sys/Tool Perf
+//   EG=RTC result col: E=4,G=6→(4+1)*26+6=136
+//   GO=Total Empathy Pass: G=6,O=14→(6+1)*26+14=196
+//   GP=Total Empathy Fail: G=6,P=15→(6+1)*26+15=197
+//   GQ=CE Pass/Fail (result col): G=6,Q=16→198
+//   GR=RTC Pass/Fail: G=6,R=17→199
+//   GX=Audit Party: G=6,X=23→205
+const OUTBOUND_MAP = {
+  date:0, result:198,              // GQ = CE overall Pass/Fail
+  skill:null,                       // fixed skill = 'Outbound'
+  party:205,                        // GX
+  agentId:188,                      // GG: (6+1)*26+6=188 ✓
+  agentName:189,                    // GH
+  tl:190,                           // GI
+  empPass:196,                      // GO
+  empFail:197,                      // GP
+  rtcPass:null, rtcFail:null,       // derive from result
+  month:null,                       // derive from date col A(0)
+  emp:{
+    'Proactive Greeting':28,        // AC: (0+1)*26+2=28 ✓
+    'Ack & Clarification':31,       // AF: (0+1)*26+5=31 ✓
+    'Speech Clarity':34,            // AI: (0+1)*26+8=34 ✓
+    'Proper Listening':37,          // AL: (0+1)*26+11=37 ✓
+    'Time/Hold Mgt':40,             // AO: (0+1)*26+14=40 ✓
+    'Personalization':43,           // AR: (0+1)*26+17=43 ✓
+    'Emotional Tone':46,            // AU: (0+1)*26+20=46 ✓
+    'Closing Courtesy':49           // AX: (0+1)*26+23=49 ✓
+  },
+  ce:{
+    'Identification':55,            // BD: (1+1)*26+3=55 ✓
+    'Information':58,               // BG: (1+1)*26+6=58 ✓
+    'Execution':61,                 // BJ: (1+1)*26+9=61 ✓
+    'Misbehave':67,                 // BP: (1+1)*26+15=67 ✓
+    'Improper Response':70,         // BS: (1+1)*26+18=70 ✓
+    'Unnecessary Hold':73,          // BV: (1+1)*26+21=73 ✓
+    'Unusual Hangup':76,            // BY: (1+1)*26+24=76 ✓
+    'Unauth Execution':82,          // CE: (2+1)*26+4=82 ✓
+    'Unauth Info Shared':85,        // CH: (2+1)*26+7=85 ✓
+    'Verification Not Followed':88, // CK: (2+1)*26+10=88 ✓
+    'Access Sharing':91,            // CN: (2+1)*26+13=91 ✓
+    'CC Product':97,                // CT: (2+1)*26+19=97 ✓
+    'CC Process':100,               // CW: (2+1)*26+22=100 ✓
+    'CC Information':103,           // CZ: (2+1)*26+25=103 ✓
+    'CC System':106,                // DC: D=3→(3+1)*26+C(2)=106
+    'Sys/Tool Performance':109      // DF: D=3→(3+1)*26+F(5)=109
+  }
+};
 // ── SKILL NAME NORMALIZATION ────────────────────────────────────────────────
 // Maps raw values found in CSVs → canonical skill names used in TGT
 const SKILL_ALIASES = {
@@ -755,6 +879,9 @@ const SKILL_ALIASES = {
   'skitto_messenger':         'Skitto_Messenger',
   'skitto_social media':      'Skitto_Social Media',
   'whatsapp':                 'Whatsapp',
+  'complaint management':     'Complaint Management',
+  'cm':                       'Complaint Management',
+  'outbound':                 'Outbound',
 };
 
 function normalizeSkill(raw) {
@@ -1052,8 +1179,137 @@ function parseRows(grid, map, channel, fileMonth, fileYear, defaultParty) {
 }
 
 // ═══════════════════════════════════════════
-//  MAIN FETCH
+//  CM ROW PARSER (Complaint Management)
 // ═══════════════════════════════════════════
+function parseCMRows(grid, map, fileMonth, fileYear) {
+  const rows = [];
+  const header = grid[0] || [];
+
+  // Compute min required col
+  const minCol = Math.max(map.agentId, map.empPass, map.empFail, map.cePass, map.ceFail, map.rtcPass, map.rtcFail);
+
+  for (let i = 1; i < grid.length; i++) {
+    const row = grid[i];
+    if (!row || row.length < minCol) continue;
+
+    const agentId = String(row[map.agentId] || '').trim();
+    if (!agentId) continue;
+
+    // Party from HC col
+    let party = null;
+    if (map.party !== null && map.party < row.length) {
+      party = normalizeParty(String(row[map.party] || ''));
+    }
+    if (!party) continue;
+
+    // Month from date col A(0)
+    const rawDate = row[0];
+    const month = parseDateToMonth(rawDate);
+    if (!month) continue;
+    if (fileMonth && month.toLowerCase() !== fileMonth.toLowerCase()) continue;
+
+    const empPass = Number(row[map.empPass]) || 0;
+    const empFail = Number(row[map.empFail]) || 0;
+    const cePassC = Number(row[map.cePass])  || 0;
+    const ceFailC = Number(row[map.ceFail])  || 0;
+    const rtcPass = Number(row[map.rtcPass]) || 0;
+    const rtcFail = Number(row[map.rtcFail]) || 0;
+
+    // Derive overall result from CE: if ceFailCount > 0 → Fail, else Pass
+    const result = ceFailC > 0 ? 'Fail' : 'Pass';
+
+    const ceParams = {}, empParams = {};
+    Object.entries(map.ce).forEach(([k, ci]) => {
+      const v = ci < row.length ? String(row[ci] || '').trim().toLowerCase() : '';
+      ceParams[k] = v === 'pass' ? 'Pass' : v === 'fail' ? 'Fail' : null;
+    });
+    Object.entries(map.emp).forEach(([k, ci]) => {
+      const v = ci < row.length ? String(row[ci] || '').trim().toLowerCase() : '';
+      empParams[k] = v === 'pass' ? 'Pass' : v === 'fail' ? 'Fail' : null;
+    });
+
+    rows.push({
+      month, year: fileYear, party,
+      skill: 'Complaint Management',
+      channel: 'Inbound',
+      agentId,
+      tl: map.tl < row.length ? String(row[map.tl] || '').trim() : '',
+      result,
+      empPass, empFail,
+      ce: result === 'Pass' ? 100 : 0,
+      empathy: (empPass + empFail) > 0 ? (empPass / (empPass + empFail) * 100) : null,
+      rtcPass, rtcFail,
+      ceParams, empParams
+    });
+  }
+  return rows;
+}
+
+// ═══════════════════════════════════════════
+//  OUTBOUND ROW PARSER
+// ═══════════════════════════════════════════
+function parseOutboundRows(grid, map, fileMonth, fileYear) {
+  const rows = [];
+
+  const minCol = Math.max(map.agentId, map.result, map.empPass, map.empFail);
+
+  for (let i = 1; i < grid.length; i++) {
+    const row = grid[i];
+    if (!row || row.length < minCol) continue;
+
+    const agentId = String(row[map.agentId] || '').trim();
+    if (!agentId) continue;
+
+    const resultRaw = String(row[map.result] || '').trim().toLowerCase();
+    const result = resultRaw === 'pass' ? 'Pass' : resultRaw === 'fail' ? 'Fail' : null;
+    if (!result) continue;
+
+    let party = null;
+    if (map.party !== null && map.party < row.length) {
+      party = normalizeParty(String(row[map.party] || ''));
+    }
+    if (!party) continue;
+
+    const rawDate = row[0];
+    const month = parseDateToMonth(rawDate);
+    if (!month) continue;
+    if (fileMonth && month.toLowerCase() !== fileMonth.toLowerCase()) continue;
+
+    const empPass = Number(row[map.empPass]) || 0;
+    const empFail = Number(row[map.empFail]) || 0;
+
+    // RTC: derive from result (no explicit columns)
+    const rtcPass = result === 'Pass' ? 1 : 0;
+    const rtcFail = result === 'Pass' ? 0 : 1;
+
+    const ceParams = {}, empParams = {};
+    Object.entries(map.ce).forEach(([k, ci]) => {
+      const v = ci < row.length ? String(row[ci] || '').trim().toLowerCase() : '';
+      ceParams[k] = v === 'pass' ? 'Pass' : v === 'fail' ? 'Fail' : null;
+    });
+    Object.entries(map.emp).forEach(([k, ci]) => {
+      const v = ci < row.length ? String(row[ci] || '').trim().toLowerCase() : '';
+      empParams[k] = v === 'pass' ? 'Pass' : v === 'fail' ? 'Fail' : null;
+    });
+
+    rows.push({
+      month, year: fileYear, party,
+      skill: 'Outbound',
+      channel: 'Inbound',
+      agentId,
+      tl: map.tl < row.length ? String(row[map.tl] || '').trim() : '',
+      result,
+      empPass, empFail,
+      ce: result === 'Pass' ? 100 : 0,
+      empathy: (empPass + empFail) > 0 ? (empPass / (empPass + empFail) * 100) : null,
+      rtcPass, rtcFail,
+      ceParams, empParams
+    });
+  }
+  return rows;
+}
+
+
 async function fetchData(forceRefresh = false) {
   const btn = document.getElementById('refreshBtn');
   btn.classList.add('spinning');
@@ -1104,6 +1360,10 @@ async function fetchData(forceRefresh = false) {
           rows = parseRows(grid, SKITTO_MAP, 'Inbound', month, year, 'GENEX');
         } else if (sheetType === 'RM') {
           rows = parseRows(grid, RM_MAP, 'Inbound', month, year, null);
+        } else if (sheetType === 'CM') {
+          rows = parseCMRows(grid, CM_MAP, month, year);
+        } else if (sheetType === 'Outbound') {
+          rows = parseOutboundRows(grid, OUTBOUND_MAP, month, year);
         }
 
         allRows.push(...rows);
