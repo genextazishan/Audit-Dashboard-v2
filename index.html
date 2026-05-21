@@ -616,20 +616,21 @@ const COLORS  = ['#58a6ff','#3fb950','#e3b341','#f85149','#bc8cff','#39d353','#7
 const COLORS_A = COLORS.map(c => c + '55');
 
 // ── COLUMN MAPS ─────────────────────────────────────────────────────────────
-// All indices are 0-based, cross-verified against index.html (Google Sheets gviz version).
-// The gviz API returns every column including blanks, so these indices match the
-// raw CSV export column positions exactly.
+// All indices are 0-based.
 //
-// INBOUND_DUMP columns (verified from original dashboard):
+// ════════════════════════════════════════════════════════════════════════════
+// MARCH 2026 ONWARDS  (original format — DO NOT CHANGE)
+// These maps are used for March, April, May and all future months.
+// ════════════════════════════════════════════════════════════════════════════
+//
+// INBOUND_DUMP columns:
 //   date:A(0)  agentId:GM(194)  tl:GO(196)  empPass:GU(203)  empFail:GV(204)
 //   result:GZ(205)  skill:HB(207)  party:HG(212)
-//   RTC: not a dedicated column — derived from result (Pass→rtcP+1, Fail→rtcF+1)
-//   month: derived from date column A(0)
 const INBOUND_MAP = {
   date:0, result:205, skill:207, party:212, agentId:194, tl:196,
   empPass:203, empFail:204,
-  rtcPass:null, rtcFail:null,   // null = derive from result (Pass→+1 rtcP, Fail→+1 rtcF)
-  month:null,                    // null = derive from date column
+  rtcPass:null, rtcFail:null,
+  month:null,
   emp:{
     'Greetings':28,'A&U':31,'Clarity':34,'Listening':37,
     'Time Mgt':40,'Personalization':43,'Tone':46,'Closing':49
@@ -642,15 +643,14 @@ const INBOUND_MAP = {
   }
 };
 
-// DIGITAL_DUMP columns (verified from original dashboard):
+// DIGITAL_DUMP columns:
 //   date:A(0)  agentId:HH(215)  tl:HI(216)  empPass:HJ(217)  empFail:HK(218)
 //   result:HL(219)  rtcPass:HO(222)  rtcFail:HP(223)  skill:HQ(224)  party:HU(228)
-//   month: derived from date column A(0)
 const DIGITAL_MAP = {
   date:0, result:219, skill:224, party:'Audit Party', agentId:215, tl:216,
   empPass:217, empFail:218,
   rtcPass:222, rtcFail:223,
-  month:null,                    // null = derive from date column
+  month:null,
   emp:{
     'Warm Welcome':43,'A&U':46,'Eff Comm':49,'Attentive':52,
     'Time Mgt':55,'Personalization':58,'Emotional':61,'Closing':64
@@ -663,15 +663,14 @@ const DIGITAL_MAP = {
   }
 };
 
-// SKITTO_121_DUMP columns (verified from original dashboard):
+// SKITTO_121_DUMP columns:
 //   date:A(0)  agentId:GM(194)  tl:GN(195)  empPass:GO(196)  empFail:GP(197)
 //   result:GQ(198)  rtcPass:GT(201)  rtcFail:GU(202)  skill:GV(203)  month:GW(204)
-//   No party column — all rows are GENEX
 const SKITTO_MAP = {
   date:0, result:198, skill:203, agentId:194, tl:195,
   empPass:196, empFail:197,
   rtcPass:201, rtcFail:202,
-  month:204,                     // has explicit month-name column GW
+  month:204,
   emp:{
     'Warm Greetings':28,'A&U':31,'Speech Clarity':34,'Proper Listening':37,
     'Time/Hold Mgt':40,'Personalization':43,'Emotional Tone':46,'Closing':49
@@ -684,20 +683,16 @@ const SKITTO_MAP = {
   }
 };
 
-// RM_DUMP columns (0-based) — verified against actual CSV (210 cols):
-//   date:A(0) [fallback: HB(209) "Eval Date" for rows where A is blank]
-//   agentId:GG(188) "VDI ID"   tl:GI(190) "Team Leader"
+// RM_DUMP columns (210 cols):
+//   date:A(0) [fallback: HB(209)]  agentId:GG(188)  tl:GI(190)
 //   skill:GM(194)  empPass:GO(196)  empFail:GP(197)
-//   result(CE):GQ(198)  rtcPass:GV(203)  rtcFail:GW(204)  party:GX(205)
-//   Empathy sub-params: AC(28) AF(31) AI(34) AL(37) AO(40) AR(43) AU(46) AX(49)
-//   CE sub-params: BD(55) BG(58) BJ(61) BM(64) BP(67) BS(70) BV(73) BY(76)
-//                  CE(82) CH(85) CK(88) CN(91) CT(97) CW(100) CZ(103) DC(106) DF(109)
+//   result:GQ(198)  rtcPass:GV(203)  rtcFail:GW(204)  party:GX(205)
 const RM_MAP = {
-  date:0, dateFallback:209,   // HB "Eval Date" used when col A is blank
+  date:0, dateFallback:209,
   result:198, skill:194, party:205, agentId:188, tl:190,
   empPass:196, empFail:197,
   rtcPass:203, rtcFail:204,
-  month:null,  // derive from date column A(0) or fallback HB(209)
+  month:null,
   emp:{
     'Warm Intro & Relationship':28,
     'Permission & Clarification':31,
@@ -729,127 +724,235 @@ const RM_MAP = {
   }
 };
 
-// CM_DUMP (Complaint Management) columns (0-based):
-//   date:A(0)   agentId:GY(200) "Agent/VDI ID"   agentName:GY→GY col, but agentId col I(8)
-//   Wait — per brief: I has Agent/VDI ID, GY has Agent names, GZ has TL names, HC has Audit Party
-//   I=col 8, GY=col 206, GZ=col 207, HC=col 212 (0-based, A=0)
-//   Empathy (Pass/Fail):
-//     AI=Proactive Greeting(34), AL=Complaint Ack(39), AO=Speech Clarity(40),
-//     AR=Proper Listening(43), AU=Time/Hold Mgt(46), AX=Personalization(49),
-//     BA=Emotional Tone(52), BD=Closing Courtesy(55)
-//   Critical Error (Pass/Fail):
-//     BJ=Identification(61), BM=Information(64), BP=Execution(67),
-//     BV=Misbehave(73), BY=Improper Response(76), CB=Unnecc Hold(79),
-//     CE=Unusual Hangup(82), CK=Unauth Execution(88), CN=Unauth Info(91),
-//     CQ=Verification(93), CT=Access Sharing(97),
-//     CZ=CC Product(103), DC=CC Process(106), DF=CC Info(109), DI=CC System(111), DL=Sys/Tool Perf(113)
-//   GR=Total Empathy Pass(194), GS=Total Empathy Fail(195)
-//   GU=CE Pass Count(198), GV=CE Fail Count(199)
-//   GW=RTC Pass(200), GX=RTC Fail(201)
-//   result derived from GU/GV: if ceFailCount==0 → Pass, else Fail
+// CM_DUMP (Complaint Management) columns:
+//   date:A(0)  agentId:I(8)  tl:GZ(207)  party:HC(210)
+//   empPass:GR(199)  empFail:GS(200)  cePass:GU(202)  ceFail:GV(203)
+//   rtcPass:GW(204)  rtcFail:GX(205)
 const CM_MAP = {
-  date:0, result:null,              // result derived from CE pass/fail counts
-  skill:null,                        // fixed skill = 'Complaint Management'
-  party:210,                         // HC: H=7→(7+1)*26+C(2)=210
-  agentId:8,                         // col I (0-based)
-  tl:207,                            // col GZ: G=6→(6+1)*26+Z(25)=207
-  empPass:199,                       // col GR: G=6→(6+1)*26+R(17)=199
-  empFail:200,                       // col GS: (6+1)*26+S(18)=200
-  cePass:202,                        // col GU: (6+1)*26+U(20)=202
-  ceFail:203,                        // col GV: (6+1)*26+V(21)=203
-  rtcPass:204,                       // col GW: (6+1)*26+W(22)=204
-  rtcFail:205,                       // col GX: (6+1)*26+X(23)=205
-  month:null,                        // derive from date col A(0)
+  date:0, result:null,
+  skill:null,
+  party:210,
+  agentId:8,
+  tl:207,
+  empPass:199,
+  empFail:200,
+  cePass:202,
+  ceFail:203,
+  rtcPass:204,
+  rtcFail:205,
+  month:null,
   emp:{
-    'Proactive Greeting':34,         // AI: A(0+1)*26+I(8)=34
-    'Complaint Ack & Clarification':37, // AL: (0+1)*26+L(11)=37
-    'Speech Clarity':40,             // AO: (0+1)*26+O(14)=40
-    'Proper Listening':43,           // AR: (0+1)*26+R(17)=43
-    'Time/Hold Mgt':46,              // AU: (0+1)*26+U(20)=46
-    'Personalization':49,            // AX: (0+1)*26+X(23)=49
-    'Emotional Tone':52,             // BA: B(1+1)*26+A(0)=52
-    'Closing Courtesy':55            // BD: (1+1)*26+D(3)=55
+    'Proactive Greeting':34,
+    'Complaint Ack & Clarification':37,
+    'Speech Clarity':40,
+    'Proper Listening':43,
+    'Time/Hold Mgt':46,
+    'Personalization':49,
+    'Emotional Tone':52,
+    'Closing Courtesy':55
   },
   ce:{
-    'Identification':61,             // BJ: (1+1)*26+J(9)=61
-    'Information':64,                // BM: (1+1)*26+M(12)=64
-    'Execution':67,                  // BP: (1+1)*26+P(15)=67
-    'Misbehave':73,                  // BV: (1+1)*26+V(21)=73
-    'Improper Response':76,          // BY: (1+1)*26+Y(24)=76
-    'Unnecessary Hold':79,           // CB: (2+1)*26+B(1)=79
-    'Unusual Hangup':82,             // CE: (2+1)*26+E(4)=82
-    'Unauth Execution':88,           // CK: (2+1)*26+K(10)=88
-    'Unauth Info Shared':91,         // CN: (2+1)*26+N(13)=91
-    'Verification Not Followed':94,  // CQ: (2+1)*26+Q(16)=94
-    'Access Sharing':97,             // CT: (2+1)*26+T(19)=97
-    'CC Product':103,                // CZ: (2+1)*26+Z(25)=103
-    'CC Process':106,                // DC: (3+1)*26+C(2)=106
-    'CC Information':109,            // DF: (3+1)*26+F(5)=109
-    'CC System':112,                 // DI: (3+1)*26+I(8)=112
-    'Sys/Tool Performance':115       // DL: (3+1)*26+L(11)=115
+    'Identification':61,
+    'Information':64,
+    'Execution':67,
+    'Misbehave':73,
+    'Improper Response':76,
+    'Unnecessary Hold':79,
+    'Unusual Hangup':82,
+    'Unauth Execution':88,
+    'Unauth Info Shared':91,
+    'Verification Not Followed':94,
+    'Access Sharing':97,
+    'CC Product':103,
+    'CC Process':106,
+    'CC Information':109,
+    'CC System':112,
+    'Sys/Tool Performance':115
   }
 };
-// OUTBOUND_DUMP columns (0-based):
-//   date:A(0)   agentId:GG(188)  agentName:GH(189)  tl:GI(190)
-//   skill col: GM(194) — but all Outbound → 'Outbound'
-//   party: GX(205)
-//   Empathy (Pass/Fail):
-//     AC(28) Proactive Greeting, AF(31) Ack & Clarification,
-//     AI(34) Speech Clarity, AL(37) Proper Listening,
-//     AO(40) Time/Hold Mgt, AR(43) Personalization,
-//     AU(46) Emotional Tone, AX(49) Closing Courtesy
-//   Critical Error (Pass/Fail):
-//     BD(55) Identification, BG(58) Information, BJ(61) Execution,
-//     BP(67) Misbehave, BS(70) Improper Resp, BV(73) Unnecessary Hold,
-//     BY(76) Unusual Hangup, CE(82) Unauth Execution, CH(85) Unauth Info,
-//     CK(88) Verification, CN(91) Access Sharing,
-//     CT(97) CC Product, CW(100) CC Process, CZ(103) CC Info, DC(108) CC System, DF(111) Sys/Tool Perf
-//   EG=RTC result col: E=4,G=6→(4+1)*26+6=136
-//   GO=Total Empathy Pass: G=6,O=14→(6+1)*26+14=196
-//   GP=Total Empathy Fail: G=6,P=15→(6+1)*26+15=197
-//   GQ=CE Pass/Fail (result col): G=6,Q=16→198
-//   GR=RTC Pass/Fail: G=6,R=17→199
-//   GX=Audit Party: G=6,X=23→205
+
+// OUTBOUND_DUMP columns:
+//   date:A(0)  agentId:GG(188)  tl:GI(190)  skill:fixed='Outbound'  party:GX(205)
+//   empPass:GO(196)  empFail:GP(197)  result:GQ(198)
 const OUTBOUND_MAP = {
-  date:0, result:198,              // GQ = CE overall Pass/Fail
-  skill:null,                       // fixed skill = 'Outbound'
-  party:205,                        // GX
-  agentId:188,                      // GG: (6+1)*26+6=188 ✓
-  agentName:189,                    // GH
-  tl:190,                           // GI
-  empPass:196,                      // GO
-  empFail:197,                      // GP
-  rtcPass:null, rtcFail:null,       // derive from result
-  month:null,                       // derive from date col A(0)
+  date:0, result:198,
+  skill:null,
+  party:205,
+  agentId:188,
+  agentName:189,
+  tl:190,
+  empPass:196,
+  empFail:197,
+  rtcPass:null, rtcFail:null,
+  month:null,
   emp:{
-    'Proactive Greeting':28,        // AC: (0+1)*26+2=28 ✓
-    'Ack & Clarification':31,       // AF: (0+1)*26+5=31 ✓
-    'Speech Clarity':34,            // AI: (0+1)*26+8=34 ✓
-    'Proper Listening':37,          // AL: (0+1)*26+11=37 ✓
-    'Time/Hold Mgt':40,             // AO: (0+1)*26+14=40 ✓
-    'Personalization':43,           // AR: (0+1)*26+17=43 ✓
-    'Emotional Tone':46,            // AU: (0+1)*26+20=46 ✓
-    'Closing Courtesy':49           // AX: (0+1)*26+23=49 ✓
+    'Proactive Greeting':28,
+    'Ack & Clarification':31,
+    'Speech Clarity':34,
+    'Proper Listening':37,
+    'Time/Hold Mgt':40,
+    'Personalization':43,
+    'Emotional Tone':46,
+    'Closing Courtesy':49
   },
   ce:{
-    'Identification':55,            // BD: (1+1)*26+3=55 ✓
-    'Information':58,               // BG: (1+1)*26+6=58 ✓
-    'Execution':61,                 // BJ: (1+1)*26+9=61 ✓
-    'Misbehave':67,                 // BP: (1+1)*26+15=67 ✓
-    'Improper Response':70,         // BS: (1+1)*26+18=70 ✓
-    'Unnecessary Hold':73,          // BV: (1+1)*26+21=73 ✓
-    'Unusual Hangup':76,            // BY: (1+1)*26+24=76 ✓
-    'Unauth Execution':82,          // CE: (2+1)*26+4=82 ✓
-    'Unauth Info Shared':85,        // CH: (2+1)*26+7=85 ✓
-    'Verification Not Followed':88, // CK: (2+1)*26+10=88 ✓
-    'Access Sharing':91,            // CN: (2+1)*26+13=91 ✓
-    'CC Product':97,                // CT: (2+1)*26+19=97 ✓
-    'CC Process':100,               // CW: (2+1)*26+22=100 ✓
-    'CC Information':103,           // CZ: (2+1)*26+25=103 ✓
-    'CC System':106,                // DC: D=3→(3+1)*26+C(2)=106
-    'Sys/Tool Performance':109      // DF: D=3→(3+1)*26+F(5)=109
+    'Identification':55,
+    'Information':58,
+    'Execution':61,
+    'Misbehave':67,
+    'Improper Response':70,
+    'Unnecessary Hold':73,
+    'Unusual Hangup':76,
+    'Unauth Execution':82,
+    'Unauth Info Shared':85,
+    'Verification Not Followed':88,
+    'Access Sharing':91,
+    'CC Product':97,
+    'CC Process':100,
+    'CC Information':103,
+    'CC System':106,
+    'Sys/Tool Performance':109
   }
 };
+
+// ════════════════════════════════════════════════════════════════════════════
+// JANUARY & FEBRUARY 2026  (legacy format — column-aligned to May CSV layout)
+// These maps are ONLY used when the file's month is January or February.
+// All column indices verified against the aligned Jan/Feb CSVs produced from
+// the original Excel workbooks.
+// ════════════════════════════════════════════════════════════════════════════
+
+// INBOUND Jan/Feb:
+//   agentId:VDI ID(194)  tl:Team Leader(196)
+//   empPass:Total Emp Parameter Pass Count(203)  empFail:Total Emp Parameter Fail Count(204)
+//   result:Critical Error(205)  skill:Skill.1(207)  party:Audit Party(212)
+//   rtcPass:RTC Pass(210)  rtcFail:RTC Fail(211)
+//   Emp params (numbered cols): 1.1(28) 1.2(31) 1.3(34) 1.4(37) 1.5(40) 1.6(43) 1.7(46) 1.8(49)
+//   CE params: 2.1(58) 2.2(61) 2.3(64)  3.1(70) 3.2(73) 3.3(76) 3.4(79)
+//              4.1(85) 4.2(88) 4.3(91) 4.4(94)  5.1(100) 5.2(103) 5.3(106) 5.4(109) 5.5(112)
+const INBOUND_MAP_LEGACY = {
+  date:0, result:205, skill:207, party:212, agentId:194, tl:196,
+  empPass:203, empFail:204,
+  rtcPass:210, rtcFail:211,
+  month:null,
+  emp:{
+    'Greetings':28,'A&U':31,'Clarity':34,'Listening':37,
+    'Time Mgt':40,'Personalization':43,'Tone':46,'Closing':49
+  },
+  ce:{
+    'Identification':58,'Information':61,'Execution':64,
+    'Misbehave':70,'Improper Resp':73,'Hold':76,'Hangup':79,
+    'Unauth Exec':85,'Unauth Info':88,'Verification':91,'Access':94,
+    'Product':100,'Process':103,'Info-NonAgent':106,'System':109,'Perf':112
+  }
+};
+
+// DIGITAL Jan/Feb:
+//   agentId:Evaluatee NT Login(8) — col 215 'Agent ID' has full names in Jan and auditor
+//           logins in Feb; col 8 consistently holds the evaluated agent's NT login in both months
+//   tl:Team Leader(216)
+//   empPass:Total Emp Parameter Pass Count(217)  empFail:Total Emp Parameter Fail Count(218)
+//   result:Critical Error(219)
+//   skill:1.0 Skill(22) — col 224 'Skill' is empty in both Jan and Feb; the real skill
+//          is at col 22 (the numbered QA form field '1.0 Skill')
+//   party:Audit Party(229)
+//   rtcPass:RTC Pass(222)  rtcFail:RTC Fail(223)
+//   Emp params (section 2, numbered): 2.1(43) 2.2(46) 2.3(49) 2.4(52) 2.5(55) 2.6(58) 2.7(61) 2.8(64)
+//   CE params: 3.1(70) 3.2(73) 3.3(76)  4.1(82) 4.2(85) 4.3(88) 4.4(91)
+//              5.1(97) 5.2(100) 5.3(103) 5.4(106)
+const DIGITAL_MAP_LEGACY = {
+  date:0, result:219, skill:22, party:229, agentId:8, tl:216,
+  empPass:217, empFail:218,
+  rtcPass:222, rtcFail:223,
+  month:null,
+  emp:{
+    'Warm Welcome':43,'A&U':46,'Eff Comm':49,'Attentive':52,
+    'Time Mgt':55,'Personalization':58,'Emotional':61,'Closing':64
+  },
+  ce:{
+    'Identification':70,'Information':73,'Execution':76,
+    'Misbehavior':82,'Improper Resp':85,'Hold':88,'Hangup':91,
+    'Unauth Exec':97,'Unauth Info':100,'Verification':103,'Access':106,
+    'Product':112,'Process':115,'Info-NonAgent':118,'System':121,'Perf':124
+  }
+};
+
+// SKITTO Jan (no Feb Excel provided):
+//   agentId:Agent ID(194)  tl:Team Leader(195)
+//   empPass:Total Emp Parameter Pass Count(196)  empFail:Total Emp Parameter Fail Count(197)
+//   result:Critical Error(198)  skill:Skill(203)
+//   rtcPass:RTC Pass(201)  rtcFail:RTC Fail(202)
+//   No party column — all rows GENEX.  No explicit month column; derive from date.
+//   Emp params: 1.1(28) 1.2(31) 1.3(34) 1.4(37) 1.5(40) 1.6(43) 1.7(46) 1.8(49)
+//   CE params:  2.1(58) 2.2(61) 2.3(64)  3.1(70) 3.2(73) 3.3(76) 3.4(79)
+//               4.1(85) 4.2(88) 4.3(91) 4.4(94)
+const SKITTO_MAP_LEGACY = {
+  date:0, result:198, skill:203, agentId:194, tl:195,
+  empPass:196, empFail:197,
+  rtcPass:201, rtcFail:202,
+  month:null,   // derive from date col A(0) — no explicit month column in legacy
+  emp:{
+    'Warm Greetings':28,'A&U':31,'Speech Clarity':34,'Proper Listening':37,
+    'Time/Hold Mgt':40,'Personalization':43,'Emotional Tone':46,'Closing':49
+  },
+  ce:{
+    'Identification':58,'Information':61,'Execution':64,
+    'Misbehave':70,'Improper Resp':73,'Hold':76,'Hangup':79,
+    'Unauth Exec':85,'Unauth Info':88,'Verification':91,'Access':94
+  }
+};
+
+// CM Jan/Feb:
+//   agentId:Evaluatee NT Login(8)  tl:Team Leader(207)  party:Audior Type(210)
+//   empPass:Total Emp Parameter Pass Count(199)  empFail:Total Emp Parameter Fail Count(200)
+//   result derived from cePass/ceFail:  cePass:Pass(202)  ceFail:Fail(203)
+//   rtcPass:RTC Pass(204)  rtcFail:RTC Fail(205)
+//   month:Month(197)  skill:Skill(198) — 'Complain Management' / 'Complaint Management'
+//   Emp params: 1.1(34) 1.2(37) 1.3(40) 1.4(43) 1.5(46) 1.6(49) 1.7(52) 1.8(55)
+//   CE params:  2.1(61) 2.2(64) 2.3(67)  3.1(73) 3.2(76) 3.3(79) 3.4(82)
+//               4.1(88) 4.2(91) 4.3(94) 4.4(97)
+const CM_MAP_LEGACY = {
+  date:0, result:null,
+  skill:null,                    // fixed = 'Complaint Management'
+  party:210,                     // 'Audior Type' col (GP / GENEX)
+  agentId:8,                     // 'Evaluatee NT Login'
+  tl:207,                        // 'Team Leader'
+  empPass:199,                   // 'Total Emp Parameter Pass Count'
+  empFail:200,                   // 'Total Emp Parameter Fail Count'
+  cePass:202,                    // 'Pass'
+  ceFail:203,                    // 'Fail'
+  rtcPass:204,                   // 'RTC Pass'
+  rtcFail:205,                   // 'RTC Fail'
+  month:null,                    // derive from date col A(0)
+  emp:{
+    'Proactive Greeting':34,
+    'Complaint Ack & Clarification':37,
+    'Speech Clarity':40,
+    'Proper Listening':43,
+    'Time/Hold Mgt':46,
+    'Personalization':49,
+    'Emotional Tone':52,
+    'Closing Courtesy':55
+  },
+  ce:{
+    'Identification':61,
+    'Information':64,
+    'Execution':67,
+    'Misbehave':73,
+    'Improper Response':76,
+    'Unnecessary Hold':79,
+    'Unusual Hangup':82,
+    'Unauth Execution':88,
+    'Unauth Info Shared':91,
+    'Verification Not Followed':94,
+    'Access Sharing':97
+  }
+};
+
+// ── LEGACY MONTH SET ────────────────────────────────────────────────────────
+// Months whose CSVs were exported from the original Jan/Feb Excel workbooks
+// and therefore use the legacy column layout above.
+const LEGACY_MONTHS = new Set(['january', 'february', 'jan', 'feb']);
 // ── SKILL NAME NORMALIZATION ────────────────────────────────────────────────
 // Maps raw values found in CSVs → canonical skill names used in TGT
 const SKILL_ALIASES = {
@@ -880,6 +983,7 @@ const SKILL_ALIASES = {
   'skitto_social media':      'Skitto_Social Media',
   'whatsapp':                 'Whatsapp',
   'complaint management':     'Complaint Management',
+  'complain management':      'Complaint Management',
   'cm':                       'Complaint Management',
   'outbound':                 'Outbound',
 };
@@ -1352,17 +1456,23 @@ async function fetchData(forceRefresh = false) {
         const grid = parseCSVToRows(text);
         let rows   = [];
 
+        // Choose the correct column map based on whether this is a legacy month
+        // (January or February 2026) or the current format (March onwards).
+        const isLegacy = LEGACY_MONTHS.has((month || '').toLowerCase());
+
         if (sheetType === 'INBOUND') {
-          rows = parseRows(grid, INBOUND_MAP, 'Inbound', month, year, null);
+          rows = parseRows(grid, isLegacy ? INBOUND_MAP_LEGACY : INBOUND_MAP, 'Inbound', month, year, null);
         } else if (sheetType === 'DIGITAL') {
-          rows = parseRows(grid, DIGITAL_MAP, 'Digital', month, year, null);
+          rows = parseRows(grid, isLegacy ? DIGITAL_MAP_LEGACY : DIGITAL_MAP, 'Digital', month, year, null);
         } else if (sheetType === 'SKITTO') {
-          rows = parseRows(grid, SKITTO_MAP, 'Inbound', month, year, 'GENEX');
+          rows = parseRows(grid, isLegacy ? SKITTO_MAP_LEGACY : SKITTO_MAP, 'Inbound', month, year, 'GENEX');
         } else if (sheetType === 'RM') {
+          // No legacy RM Excel was provided; RM uses the standard map for all months
           rows = parseRows(grid, RM_MAP, 'Inbound', month, year, null);
         } else if (sheetType === 'CM') {
-          rows = parseCMRows(grid, CM_MAP, month, year);
+          rows = parseCMRows(grid, isLegacy ? CM_MAP_LEGACY : CM_MAP, month, year);
         } else if (sheetType === 'Outbound') {
+          // No legacy Outbound Excel was provided; Outbound uses the standard map for all months
           rows = parseOutboundRows(grid, OUTBOUND_MAP, month, year);
         }
 
