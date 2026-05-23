@@ -71,7 +71,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,BlinkMacSystemFont,sans-seri
 .refresh-btn.spinning svg{animation:spin 0.8s linear infinite}
 
 /* FILTER BAR */
-.filter-bar{background:var(--bg-surface);border-bottom:1px solid var(--border-muted);padding:12px 32px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.filter-bar{background:var(--bg-surface);border-bottom:1px solid var(--border-muted);padding:12px 32px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;position:sticky;top:68px;z-index:99;backdrop-filter:blur(12px)}
 .filter-group{display:flex;align-items:center;gap:8px}
 .filter-label{font-size:0.72rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.8px;white-space:nowrap}
 .filter-select{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 12px;font-size:0.82rem;color:var(--text-primary);cursor:pointer;outline:none;transition:var(--transition);min-width:140px}
@@ -456,6 +456,39 @@ tr.drilldown-row td:first-child{padding-left:40px;color:var(--text-muted)}
     </select>
   </div>
   <div class="filter-sep"></div>
+  <div class="filter-group" style="position:relative">
+    <span class="filter-label">Tenure</span>
+    <div id="tenureMultiWrap" style="position:relative;min-width:170px">
+      <button id="tenureDropBtn" onclick="toggleTenureDrop(event)" style="
+        background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-sm);
+        padding:6px 30px 6px 12px;font-size:0.82rem;color:var(--text-primary);cursor:pointer;
+        outline:none;transition:var(--transition);min-width:170px;text-align:left;width:100%;
+        white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative;
+      ">⏱️ All Tenures
+        <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;font-size:0.65rem;color:var(--text-muted)">▼</span>
+      </button>
+      <div id="tenureDropPanel" style="
+        display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:500;
+        background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-md);
+        min-width:190px;max-height:320px;overflow-y:auto;box-shadow:var(--shadow-lg);padding:6px 0;
+      ">
+        <div style="padding:6px 12px 4px;border-bottom:1px solid var(--border-muted);display:flex;gap:8px">
+          <button onclick="selectAllTenures()" style="flex:1;padding:3px 8px;border-radius:6px;border:1px solid var(--blue);background:var(--blue-dim);color:var(--blue);font-size:0.72rem;font-weight:600;cursor:pointer;">All</button>
+          <button onclick="clearAllTenures()" style="flex:1;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:0.72rem;font-weight:600;cursor:pointer;">None</button>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;padding:7px 14px;cursor:pointer;font-size:0.82rem;border-bottom:1px solid var(--border-muted)" onclick="event.stopPropagation()">
+          <input type="checkbox" id="tenureOpt_all" onchange="onTenureAllToggle(this)" checked style="accent-color:var(--blue)"> All Tenures
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="tenure-chk" value="0-30" onchange="onTenureChkChange()" style="accent-color:var(--blue)"> 0 to 30 Days</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="tenure-chk" value="31-60" onchange="onTenureChkChange()" style="accent-color:var(--blue)"> 31 to 60 Days</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="tenure-chk" value="61-90" onchange="onTenureChkChange()" style="accent-color:var(--blue)"> 61 to 90 Days</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="tenure-chk" value="91-120" onchange="onTenureChkChange()" style="accent-color:var(--blue)"> 91 to 120 Days</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="tenure-chk" value="121-365" onchange="onTenureChkChange()" style="accent-color:var(--blue)"> 121 to 365 Days</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="tenure-chk" value="365+" onchange="onTenureChkChange()" style="accent-color:var(--blue)"> 365+ Days</label>
+      </div>
+    </div>
+  </div>
+  <div class="filter-sep"></div>
   <div class="search-wrap">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     <input type="text" class="search-input" id="fSearch" placeholder="Search agent ID or TL…" oninput="applyFilters()">
@@ -628,6 +661,8 @@ const COLORS_A = COLORS.map(c => c + '55');
 //   result:GZ(205)  skill:HB(207)  party:HG(212)
 const INBOUND_MAP = {
   date:0, result:205, skill:207, party:212, agentId:194, tl:196,
+  qa:197,    // GP column — QA name
+  tenure:198, // GQ column — tenure bucket
   empPass:203, empFail:204,
   rtcPass:null, rtcFail:null,
   month:null,
@@ -648,6 +683,8 @@ const INBOUND_MAP = {
 //   result:HL(219)  rtcPass:HO(222)  rtcFail:HP(223)  skill:HQ(224)  party:HU(228)
 const DIGITAL_MAP = {
   date:0, result:219, skill:224, party:'Audit Party', agentId:215, tl:216,
+  qa:null, // No QA data yet for Digital (team will add)
+  tenure:230, // HW column
   empPass:217, empFail:218,
   rtcPass:222, rtcFail:223,
   month:null,
@@ -668,6 +705,8 @@ const DIGITAL_MAP = {
 //   result:GQ(198)  rtcPass:GT(201)  rtcFail:GU(202)  skill:GV(203)  month:GW(204)
 const SKITTO_MAP = {
   date:0, result:198, skill:203, agentId:194, tl:195,
+  qa:null, // No QA data for Skitto_121
+  tenure:null, // No tenure data for Skitto_121
   empPass:196, empFail:197,
   rtcPass:201, rtcFail:202,
   month:null,
@@ -690,6 +729,8 @@ const SKITTO_MAP = {
 const RM_MAP = {
   date:0, dateFallback:209,
   result:198, skill:194, party:205, agentId:188, tl:190,
+  qa:191,    // GJ column
+  tenure:192, // GK column
   empPass:196, empFail:197,
   rtcPass:203, rtcFail:204,
   month:null,
@@ -734,6 +775,8 @@ const CM_MAP = {
   party:210,
   agentId:8,
   tl:207,
+  qa:null, // No QA data for CM
+  tenure:null, // No tenure data for CM
   empPass:199,
   empFail:200,
   cePass:202,
@@ -781,6 +824,8 @@ const OUTBOUND_MAP = {
   agentId:188,
   agentName:189,
   tl:190,
+  qa:191,    // GJ column
+  tenure:192, // GK column
   empPass:196,
   empFail:197,
   rtcPass:null, rtcFail:null,
@@ -832,6 +877,7 @@ const OUTBOUND_MAP = {
 //              4.1(85) 4.2(88) 4.3(91) 4.4(94)  5.1(100) 5.2(103) 5.3(106) 5.4(109) 5.5(112)
 const INBOUND_MAP_LEGACY = {
   date:0, result:205, skill:207, party:212, agentId:194, tl:196,
+  qa:197, tenure:198,
   empPass:203, empFail:204,
   rtcPass:210, rtcFail:211,
   month:null,
@@ -862,6 +908,7 @@ const INBOUND_MAP_LEGACY = {
 //              5.1(97) 5.2(100) 5.3(103) 5.4(106)
 const DIGITAL_MAP_LEGACY = {
   date:0, result:219, skill:22, party:229, agentId:8, tl:216,
+  qa:null, tenure:230,
   empPass:217, empFail:218,
   rtcPass:222, rtcFail:223,
   month:null,
@@ -888,6 +935,7 @@ const DIGITAL_MAP_LEGACY = {
 //               4.1(85) 4.2(88) 4.3(91) 4.4(94)
 const SKITTO_MAP_LEGACY = {
   date:0, result:198, skill:203, agentId:194, tl:195,
+  qa:null, tenure:null,
   empPass:196, empFail:197,
   rtcPass:201, rtcFail:202,
   month:null,   // derive from date col A(0) — no explicit month column in legacy
@@ -917,6 +965,7 @@ const CM_MAP_LEGACY = {
   party:210,                     // 'Audior Type' col (GP / GENEX)
   agentId:8,                     // 'Evaluatee NT Login'
   tl:207,                        // 'Team Leader'
+  qa:null, tenure:null,
   empPass:199,                   // 'Total Emp Parameter Pass Count'
   empFail:200,                   // 'Total Emp Parameter Fail Count'
   cePass:202,                    // 'Pass'
@@ -1003,9 +1052,32 @@ function normalizeParty(raw) {
   return null;
 }
 
-// ═══════════════════════════════════════════
-//  STATE
-// ═══════════════════════════════════════════
+// ── TENURE NORMALIZATION ────────────────────────────────────────────────────
+// Maps raw tenure values (text or numeric days) to standard bucket keys
+function normalizeTenure(raw) {
+  if (!raw || raw.trim() === '') return null;
+  const s = raw.trim().toLowerCase();
+  // If it's already a bucket label
+  if (s.includes('0') && (s.includes('30') || s.includes('0-30') || s.includes('0 to 30'))) return '0-30';
+  if (s.includes('31') && s.includes('60')) return '31-60';
+  if (s.includes('61') && s.includes('90')) return '61-90';
+  if (s.includes('91') && s.includes('120')) return '91-120';
+  if ((s.includes('121') && s.includes('365')) || s.includes('121-365')) return '121-365';
+  if (s.includes('365+') || s.includes('>365') || s.includes('above 365')) return '365+';
+  // If it's a numeric number of days
+  const num = parseFloat(raw);
+  if (!isNaN(num)) {
+    if (num <= 30)  return '0-30';
+    if (num <= 60)  return '31-60';
+    if (num <= 90)  return '61-90';
+    if (num <= 120) return '91-120';
+    if (num <= 365) return '121-365';
+    return '365+';
+  }
+  return null; // unknown tenure
+}
+
+
 let rawRows      = [];
 let filteredRows = [];
 let aggregated   = {};
@@ -1271,6 +1343,8 @@ function parseRows(grid, map, channel, fileMonth, fileYear, defaultParty) {
       channel: skill === 'Tier_Whatsapp' ? 'Inbound' : channel,
       agentId,
       tl: String(row[map2.tl] || '').trim(),
+      qa: (map2.qa !== null && map2.qa !== undefined && map2.qa < row.length) ? (String(row[map2.qa] || '').trim() || 'N/A') : 'N/A',
+      tenure: normalizeTenure((map2.tenure !== null && map2.tenure !== undefined && map2.tenure < row.length) ? String(row[map2.tenure] || '').trim() : ''),
       result,
       empPass, empFail,
       ce:     result === 'Pass' ? 100 : 0,
@@ -1338,6 +1412,8 @@ function parseCMRows(grid, map, fileMonth, fileYear) {
       channel: 'Inbound',
       agentId,
       tl: map.tl < row.length ? String(row[map.tl] || '').trim() : '',
+      qa: 'N/A', // No QA data for CM
+      tenure: null, // No tenure for CM
       result,
       empPass, empFail,
       ce: result === 'Pass' ? 100 : 0,
@@ -1402,6 +1478,8 @@ function parseOutboundRows(grid, map, fileMonth, fileYear) {
       channel: 'Inbound',
       agentId,
       tl: map.tl < row.length ? String(row[map.tl] || '').trim() : '',
+      qa: (map.qa !== null && map.qa !== undefined && map.qa < row.length) ? (String(row[map.qa] || '').trim() || 'N/A') : 'N/A',
+      tenure: normalizeTenure((map.tenure !== null && map.tenure !== undefined && map.tenure < row.length) ? String(row[map.tenure] || '').trim() : ''),
       result,
       empPass, empFail,
       ce: result === 'Pass' ? 100 : 0,
@@ -1550,6 +1628,7 @@ function clearFilters() {
   document.getElementById('fSearch').value = '';
   selectAllMonths();
   selectAllSkills();
+  selectAllTenures();
 }
 
 function applyFilters() {
@@ -1559,7 +1638,8 @@ function applyFilters() {
   const channel = document.getElementById('fChannel').value;
   const result  = document.getElementById('fResult').value;
   const search  = document.getElementById('fSearch').value.toLowerCase();
-  const selectedSkills = getSelectedSkills();
+  const selectedSkills  = getSelectedSkills();
+  const selectedTenures = getSelectedTenures();
 
   filteredRows = rawRows.filter(r =>
     (selectedMonths === null || selectedMonths.has(r.month)) &&
@@ -1568,7 +1648,8 @@ function applyFilters() {
     (channel === 'all' || r.channel === channel) &&
     (selectedSkills === null || selectedSkills.has(r.skill)) &&
     (result  === 'all' || r.result  === result)  &&
-    (!search || r.agentId.toLowerCase().includes(search) || r.tl.toLowerCase().includes(search))
+    (selectedTenures === null || (r.tenure !== null && selectedTenures.has(r.tenure))) &&
+    (!search || r.agentId.toLowerCase().includes(search) || r.tl.toLowerCase().includes(search) || (r.qa||'').toLowerCase().includes(search))
   );
 
   aggregated = aggregate(filteredRows);
@@ -1601,7 +1682,7 @@ function aggregate(rows) {
     p.audits++; if (r.result === 'Pass') p.pass++; else p.fail++;
     p.empP += r.empPass; p.empF += r.empFail;
     p.rtcP += r.rtcPass; p.rtcF += r.rtcFail;
-    if (!p.agents[r.agentId]) p.agents[r.agentId] = { id:r.agentId, tl:r.tl, audits:0, ceErrors:0, empPct:null, empP:0, empF:0 };
+    if (!p.agents[r.agentId]) p.agents[r.agentId] = { id:r.agentId, tl:r.tl, qa:r.qa||'N/A', audits:0, ceErrors:0, empPct:null, empP:0, empF:0 };
     p.agents[r.agentId].audits++;
     p.agents[r.agentId].empP += r.empPass;
     p.agents[r.agentId].empF += r.empFail;
@@ -1843,35 +1924,35 @@ function updateLeaderboards() {
 }
 function renderErrLB(elId, partyKey) {
   const agents={};
-  SKILLS.forEach(skill=>{const p=aggregated[skill]?.[partyKey];if(!p)return;Object.values(p.agents).forEach(a=>{if(!agents[a.id])agents[a.id]={id:a.id,tl:a.tl,errors:0,skills:new Set()};agents[a.id].errors+=a.ceErrors;if(a.ceErrors>0)agents[a.id].skills.add(skill);});});
+  SKILLS.forEach(skill=>{const p=aggregated[skill]?.[partyKey];if(!p)return;Object.values(p.agents).forEach(a=>{if(!agents[a.id])agents[a.id]={id:a.id,tl:a.tl,qa:a.qa||'N/A',errors:0,skills:new Set()};agents[a.id].errors+=a.ceErrors;if(a.ceErrors>0)agents[a.id].skills.add(skill);});});
   const sorted=Object.values(agents).filter(a=>a.errors>0).sort((a,b)=>b.errors-a.errors).slice(0,10);
   const el=document.getElementById(elId);
   if(!sorted.length){el.innerHTML='<div class="empty-state">No CE errors found</div>';return;}
-  el.innerHTML=sorted.map((a,i)=>`<div class="lb-item"><div class="rank-badge ${i===0?'r1':i===1?'r2':i===2?'r3':'rN'}">${i+1}</div><div class="lb-info"><div class="lb-name">${a.id}</div><div class="lb-meta">${a.tl} · ${[...a.skills].join(', ')}</div></div><div class="lb-bar-wrap"><div class="lb-bar" style="width:${Math.min(100,a.errors*10)}%;background:linear-gradient(90deg,var(--red),var(--pink))"></div></div><div class="lb-score-val" style="color:var(--red)">${a.errors}</div></div>`).join('');
+  el.innerHTML=sorted.map((a,i)=>`<div class="lb-item"><div class="rank-badge ${i===0?'r1':i===1?'r2':i===2?'r3':'rN'}">${i+1}</div><div class="lb-info"><div class="lb-name">${a.id}</div><div class="lb-meta">TL: ${a.tl}${a.qa&&a.qa!=='N/A'?' · QA: '+a.qa:''} · ${[...a.skills].join(', ')}</div></div><div class="lb-bar-wrap"><div class="lb-bar" style="width:${Math.min(100,a.errors*10)}%;background:linear-gradient(90deg,var(--red),var(--pink))"></div></div><div class="lb-score-val" style="color:var(--red)">${a.errors}</div></div>`).join('');
 }
 function renderEmpLB(elId, partyKey) {
   const agents={};
-  SKILLS.forEach(skill=>{const p=aggregated[skill]?.[partyKey];if(!p)return;Object.values(p.agents).forEach(a=>{if(a.empPct===null)return;if(!agents[a.id])agents[a.id]={id:a.id,tl:a.tl,empPcts:[],skills:new Set()};agents[a.id].empPcts.push(a.empPct);agents[a.id].skills.add(skill);});});
+  SKILLS.forEach(skill=>{const p=aggregated[skill]?.[partyKey];if(!p)return;Object.values(p.agents).forEach(a=>{if(a.empPct===null)return;if(!agents[a.id])agents[a.id]={id:a.id,tl:a.tl,qa:a.qa||'N/A',empPcts:[],skills:new Set()};agents[a.id].empPcts.push(a.empPct);agents[a.id].skills.add(skill);});});
   const sorted=Object.values(agents).map(a=>({...a,avgEmp:a.empPcts.reduce((s,v)=>s+v,0)/a.empPcts.length})).filter(a=>a.avgEmp>=80).sort((a,b)=>b.avgEmp-a.avgEmp).slice(0,10);
   const el=document.getElementById(elId);
   if(!sorted.length){el.innerHTML='<div class="empty-state">No agents at ≥80% empathy</div>';return;}
-  el.innerHTML=sorted.map((a,i)=>`<div class="lb-item"><div class="rank-badge ${i===0?'r1':i===1?'r2':i===2?'r3':'rN'}">${i+1}</div><div class="lb-info"><div class="lb-name">${a.id}</div><div class="lb-meta">${a.tl} · ${[...a.skills].join(', ')}</div></div><div class="lb-bar-wrap"><div class="lb-bar" style="width:${a.avgEmp||0}%"></div></div><div class="lb-score-val">${a.avgEmp.toFixed(1)}%</div></div>`).join('');
+  el.innerHTML=sorted.map((a,i)=>`<div class="lb-item"><div class="rank-badge ${i===0?'r1':i===1?'r2':i===2?'r3':'rN'}">${i+1}</div><div class="lb-info"><div class="lb-name">${a.id}</div><div class="lb-meta">TL: ${a.tl}${a.qa&&a.qa!=='N/A'?' · QA: '+a.qa:''} · ${[...a.skills].join(', ')}</div></div><div class="lb-bar-wrap"><div class="lb-bar" style="width:${a.avgEmp||0}%"></div></div><div class="lb-score-val">${a.avgEmp.toFixed(1)}%</div></div>`).join('');
 }
 function renderEmpOffLB(elId, partyKey) {
   const agents={};
-  SKILLS.forEach(skill=>{const p=aggregated[skill]?.[partyKey];if(!p)return;Object.values(p.agents).forEach(a=>{if(a.empPct===null)return;if(!agents[a.id])agents[a.id]={id:a.id,tl:a.tl,empPcts:[],skills:new Set()};agents[a.id].empPcts.push(a.empPct);agents[a.id].skills.add(skill);});});
+  SKILLS.forEach(skill=>{const p=aggregated[skill]?.[partyKey];if(!p)return;Object.values(p.agents).forEach(a=>{if(a.empPct===null)return;if(!agents[a.id])agents[a.id]={id:a.id,tl:a.tl,qa:a.qa||'N/A',empPcts:[],skills:new Set()};agents[a.id].empPcts.push(a.empPct);agents[a.id].skills.add(skill);});});
   const sorted=Object.values(agents).map(a=>({...a,avgEmp:a.empPcts.reduce((s,v)=>s+v,0)/a.empPcts.length})).filter(a=>a.avgEmp<80).sort((a,b)=>a.avgEmp-b.avgEmp).slice(0,10);
   const el=document.getElementById(elId);
   if(!sorted.length){el.innerHTML='<div class="empty-state">No agents below 80% empathy 🎉</div>';return;}
-  el.innerHTML=sorted.map((a,i)=>`<div class="lb-item"><div class="rank-badge ${i===0?'r1':i===1?'r2':i===2?'r3':'rN'}">${i+1}</div><div class="lb-info"><div class="lb-name">${a.id}</div><div class="lb-meta">${a.tl} · ${[...a.skills].join(', ')}</div></div><div class="lb-bar-wrap"><div class="lb-bar" style="width:${a.avgEmp||0}%;background:linear-gradient(90deg,var(--red),var(--pink))"></div></div><div class="lb-score-val" style="color:var(--red)">${a.avgEmp.toFixed(1)}%</div></div>`).join('');
+  el.innerHTML=sorted.map((a,i)=>`<div class="lb-item"><div class="rank-badge ${i===0?'r1':i===1?'r2':i===2?'r3':'rN'}">${i+1}</div><div class="lb-info"><div class="lb-name">${a.id}</div><div class="lb-meta">TL: ${a.tl}${a.qa&&a.qa!=='N/A'?' · QA: '+a.qa:''} · ${[...a.skills].join(', ')}</div></div><div class="lb-bar-wrap"><div class="lb-bar" style="width:${a.avgEmp||0}%;background:linear-gradient(90deg,var(--red),var(--pink))"></div></div><div class="lb-score-val" style="color:var(--red)">${a.avgEmp.toFixed(1)}%</div></div>`).join('');
 }
 function renderCEScoreLB(elId, partyKey) {
   const agents={};
-  SKILLS.forEach(skill=>{const p=aggregated[skill]?.[partyKey];if(!p)return;Object.values(p.agents).forEach(a=>{if(!agents[a.id])agents[a.id]={id:a.id,tl:a.tl,audits:0,errors:0,skills:new Set()};agents[a.id].audits+=a.audits||0;agents[a.id].errors+=a.ceErrors||0;agents[a.id].skills.add(skill);});});
+  SKILLS.forEach(skill=>{const p=aggregated[skill]?.[partyKey];if(!p)return;Object.values(p.agents).forEach(a=>{if(!agents[a.id])agents[a.id]={id:a.id,tl:a.tl,qa:a.qa||'N/A',audits:0,errors:0,skills:new Set()};agents[a.id].audits+=a.audits||0;agents[a.id].errors+=a.ceErrors||0;agents[a.id].skills.add(skill);});});
   const sorted=Object.values(agents).filter(a=>a.audits>0&&a.errors===0).sort((a,b)=>b.audits-a.audits).slice(0,10);
   const el=document.getElementById(elId);
   if(!sorted.length){el.innerHTML='<div class="empty-state">No agents with 100% CE</div>';return;}
-  el.innerHTML=sorted.map((a,i)=>`<div class="lb-item"><div class="rank-badge ${i===0?'r1':i===1?'r2':i===2?'r3':'rN'}">${i+1}</div><div class="lb-info"><div class="lb-name">${a.id}</div><div class="lb-meta">${a.tl} · ${[...a.skills].join(', ')}</div></div><div class="lb-bar-wrap"><div class="lb-bar" style="width:100%;background:linear-gradient(90deg,var(--green),var(--teal))"></div></div><div class="lb-score-val" style="color:var(--green)">100% <span style="font-size:0.65rem;color:var(--text-muted)">(${a.audits})</span></div></div>`).join('');
+  el.innerHTML=sorted.map((a,i)=>`<div class="lb-item"><div class="rank-badge ${i===0?'r1':i===1?'r2':i===2?'r3':'rN'}">${i+1}</div><div class="lb-info"><div class="lb-name">${a.id}</div><div class="lb-meta">TL: ${a.tl}${a.qa&&a.qa!=='N/A'?' · QA: '+a.qa:''} · ${[...a.skills].join(', ')}</div></div><div class="lb-bar-wrap"><div class="lb-bar" style="width:100%;background:linear-gradient(90deg,var(--green),var(--teal))"></div></div><div class="lb-score-val" style="color:var(--green)">100% <span style="font-size:0.65rem;color:var(--text-muted)">(${a.audits})</span></div></div>`).join('');
 }
 
 // ═══════════════════════════════════════════
@@ -1895,11 +1976,11 @@ function toggleAgentDrilldown(agentKey) {
   document.querySelectorAll(`tr.drilldown-row[data-key="${CSS.escape(agentKey)}"]`).forEach(r=>r.classList.toggle('visible',expandedAgents.has(agentKey)));
 }
 function renderGroupedTable() {
-  document.getElementById('auditThead').innerHTML=`<tr><th>#</th><th onclick="sortTable('party')">Party</th><th onclick="sortTable('agentId')">Agent ID</th><th onclick="sortTable('tl')">Team Lead</th><th>Skills</th><th>Audits</th><th>CE%</th><th>Empathy%</th><th>RTC%</th><th>Pass</th><th>Fail</th></tr>`;
+  document.getElementById('auditThead').innerHTML=`<tr><th>#</th><th onclick="sortTable('party')">Party</th><th onclick="sortTable('agentId')">Agent ID</th><th onclick="sortTable('tl')">Team Lead</th><th>QA</th><th>Skills</th><th>Audits</th><th>CE%</th><th>Empathy%</th><th>RTC%</th><th>Pass</th><th>Fail</th></tr>`;
   const agentMap={};
   filteredRows.forEach(r=>{
     const key=r.agentId+'|'+r.party;
-    if(!agentMap[key]) agentMap[key]={agentId:r.agentId,party:r.party,tl:r.tl,audits:0,pass:0,fail:0,empPass:0,empFail:0,rtcP:0,rtcF:0,skills:new Set(),rows:[]};
+    if(!agentMap[key]) agentMap[key]={agentId:r.agentId,party:r.party,tl:r.tl,qa:r.qa||'N/A',audits:0,pass:0,fail:0,empPass:0,empFail:0,rtcP:0,rtcF:0,skills:new Set(),rows:[]};
     const a=agentMap[key]; a.audits++; a.rows.push(r);
     if(r.result==='Pass') a.pass++; else a.fail++;
     a.empPass+=r.empPass; a.empFail+=r.empFail; a.rtcP+=r.rtcPass; a.rtcF+=r.rtcFail;
@@ -1920,13 +2001,13 @@ function renderGroupedTable() {
   const pageSize=parseInt(document.getElementById('pageSize').value),total=agents.length,pages=Math.ceil(total/pageSize);
   const start=(currentPage-1)*pageSize,end=Math.min(start+pageSize,total),page=agents.slice(start,end);
   const tbody=document.getElementById('auditTbody');
-  if(!page.length){tbody.innerHTML='<tr><td colspan="11" class="empty-state">No records match your filters.</td></tr>';}
+  if(!page.length){tbody.innerHTML='<tr><td colspan="12" class="empty-state">No records match your filters.</td></tr>';}
   else{
     let html='';
     page.forEach((a,i)=>{
       const key=a.agentId+'|'+a.party,isExp=expandedAgents.has(key);
       const eClass=a.empPct!==null?(a.empPct>=85?'bar-g':a.empPct>=70?'bar-o':'bar-r'):'bar-g';
-      html+=`<tr class="grouped-row ${isExp?'expanded':''}" data-key="${key}" onclick="toggleAgentDrilldown('${key.replace(/'/g,"\\'")}')"><td style="color:var(--text-muted)"><span class="expand-icon">▶</span>${start+i+1}</td><td><span class="pill ${a.party==='GP'?'pill-gp':'pill-gx'}">${a.party}</span></td><td style="font-weight:700">${a.agentId}</td><td style="font-size:0.75rem;color:var(--text-secondary)">${a.tl}</td><td style="font-size:0.72rem;color:var(--text-muted)">${[...a.skills].join(', ')}</td><td style="font-weight:700;color:var(--blue)">${a.audits}</td><td class="${a.cePct!==null&&a.cePct<98?'below-tgt-cell':''}">${a.cePct!==null?a.cePct.toFixed(1)+'%':'—'}</td><td>${fmtP(a.empPct)}<span class="mini-bar-wrap"><span class="mini-bar ${eClass}" style="width:${a.empPct||0}%"></span></span></td><td>${fmtP(a.rtcPct)}</td><td style="color:var(--green)">${a.pass}</td><td style="color:var(--red)">${a.fail}</td></tr>`;
+      html+=`<tr class="grouped-row ${isExp?'expanded':''}" data-key="${key}" onclick="toggleAgentDrilldown('${key.replace(/'/g,"\\'")}')"><td style="color:var(--text-muted)"><span class="expand-icon">▶</span>${start+i+1}</td><td><span class="pill ${a.party==='GP'?'pill-gp':'pill-gx'}">${a.party}</span></td><td style="font-weight:700">${a.agentId}</td><td style="font-size:0.75rem;color:var(--text-secondary)">${a.tl}</td><td style="font-size:0.72rem;color:var(--text-muted)">${a.qa&&a.qa!=='N/A'?`<span style="color:var(--purple)">${a.qa}</span>`:'<span style="color:var(--text-muted);font-style:italic">N/A</span>'}</td><td style="font-size:0.72rem;color:var(--text-muted)">${[...a.skills].join(', ')}</td><td style="font-weight:700;color:var(--blue)">${a.audits}</td><td class="${a.cePct!==null&&a.cePct<98?'below-tgt-cell':''}">${a.cePct!==null?a.cePct.toFixed(1)+'%':'—'}</td><td>${fmtP(a.empPct)}<span class="mini-bar-wrap"><span class="mini-bar ${eClass}" style="width:${a.empPct||0}%"></span></span></td><td>${fmtP(a.rtcPct)}</td><td style="color:var(--green)">${a.pass}</td><td style="color:var(--red)">${a.fail}</td></tr>`;
       a.rows.forEach((r,ri)=>{
         const ep=(r.empPass+r.empFail)>0?(r.empPass/(r.empPass+r.empFail)*100):null;
         const rp=(r.rtcPass+r.rtcFail)>0?(r.rtcPass/(r.rtcPass+r.rtcFail)*100):null;
@@ -1940,7 +2021,7 @@ function renderGroupedTable() {
   renderPagination(currentPage,pages);
 }
 function renderFlatTable() {
-  document.getElementById('auditThead').innerHTML=`<tr><th onclick="sortTable('rank')">#</th><th onclick="sortTable('party')">Party</th><th onclick="sortTable('agentId')">Agent ID</th><th onclick="sortTable('tl')">Team Lead</th><th onclick="sortTable('skill')">Skill</th><th onclick="sortTable('channel')">Channel</th><th onclick="sortTable('result')">Result</th><th onclick="sortTable('ce')">CE%</th><th onclick="sortTable('empathy')">Empathy%</th><th onclick="sortTable('rtc')">RTC%</th><th onclick="sortTable('month')">Month</th></tr>`;
+  document.getElementById('auditThead').innerHTML=`<tr><th onclick="sortTable('rank')">#</th><th onclick="sortTable('party')">Party</th><th onclick="sortTable('agentId')">Agent ID</th><th onclick="sortTable('tl')">Team Lead</th><th>QA</th><th onclick="sortTable('skill')">Skill</th><th onclick="sortTable('channel')">Channel</th><th onclick="sortTable('result')">Result</th><th onclick="sortTable('ce')">CE%</th><th onclick="sortTable('empathy')">Empathy%</th><th onclick="sortTable('rtc')">RTC%</th><th onclick="sortTable('month')">Month</th></tr>`;
   const pageSize=parseInt(document.getElementById('pageSize').value);
   const sorted=[...filteredRows].sort((a,b)=>{
     let va=a[sortKey],vb=b[sortKey];
@@ -1949,12 +2030,13 @@ function renderFlatTable() {
   });
   const total=sorted.length,pages=Math.ceil(total/pageSize),start=(currentPage-1)*pageSize,end=Math.min(start+pageSize,total),page=sorted.slice(start,end);
   const tbody=document.getElementById('auditTbody');
-  if(!page.length){tbody.innerHTML='<tr><td colspan="11" class="empty-state">No records match your filters.</td></tr>';}
+  if(!page.length){tbody.innerHTML='<tr><td colspan="12" class="empty-state">No records match your filters.</td></tr>';}
   else{tbody.innerHTML=page.map((r,i)=>{
     const tgt=TGT[r.skill]||98,ep=(r.empPass+r.empFail)>0?(r.empPass/(r.empPass+r.empFail)*100):null,rp=(r.rtcPass+r.rtcFail)>0?(r.rtcPass/(r.rtcPass+r.rtcFail)*100):null;
     const eClass=ep!==null?(ep>=85?'bar-g':ep>=70?'bar-o':'bar-r'):'bar-g';
     const ri=filteredRows.indexOf(r);
-    return `<tr onclick="openModal(${ri})"><td style="color:var(--text-muted)">${start+i+1}</td><td><span class="pill ${r.party==='GP'?'pill-gp':'pill-gx'}">${r.party}</span></td><td style="font-weight:700">${r.agentId}</td><td style="font-size:0.75rem;color:var(--text-secondary)">${r.tl}</td><td><span class="pill pill-skill">${r.skill}</span></td><td style="font-size:0.75rem;color:var(--text-muted)">${r.channel}</td><td><span class="pill ${r.result==='Pass'?'pill-pass':'pill-fail'}">${r.result}</span></td><td class="${r.ce<tgt?'below-tgt-cell':''}">${r.ce}%</td><td>${fmtP(ep)}<span class="mini-bar-wrap"><span class="mini-bar ${eClass}" style="width:${ep||0}%"></span></span></td><td>${fmtP(rp)}</td><td style="font-size:0.72rem;color:var(--text-muted)">${r.month} ${r.year}</td></tr>`;
+    const qaDisp=r.qa&&r.qa!=='N/A'?`<span style="color:var(--purple);font-size:0.72rem">${r.qa}</span>`:'<span style="color:var(--text-muted);font-style:italic;font-size:0.72rem">N/A</span>';
+    return `<tr onclick="openModal(${ri})"><td style="color:var(--text-muted)">${start+i+1}</td><td><span class="pill ${r.party==='GP'?'pill-gp':'pill-gx'}">${r.party}</span></td><td style="font-weight:700">${r.agentId}</td><td style="font-size:0.75rem;color:var(--text-secondary)">${r.tl}</td><td>${qaDisp}</td><td><span class="pill pill-skill">${r.skill}</span></td><td style="font-size:0.75rem;color:var(--text-muted)">${r.channel}</td><td><span class="pill ${r.result==='Pass'?'pill-pass':'pill-fail'}">${r.result}</span></td><td class="${r.ce<tgt?'below-tgt-cell':''}">${r.ce}%</td><td>${fmtP(ep)}<span class="mini-bar-wrap"><span class="mini-bar ${eClass}" style="width:${ep||0}%"></span></span></td><td>${fmtP(rp)}</td><td style="font-size:0.72rem;color:var(--text-muted)">${r.month} ${r.year}</td></tr>`;
   }).join('');}
   document.getElementById('pageInfo').textContent=`Showing ${start+1}–${end} of ${total} records`;
   renderPagination(currentPage,pages);
@@ -1997,6 +2079,7 @@ function openModal(idx) {
       <div class="modal-stat"><div class="modal-stat-label">Empathy%</div><div class="modal-stat-value" style="color:var(--blue)">${fmtP(ep)}</div></div>
       <div class="modal-stat"><div class="modal-stat-label">RTC%</div><div class="modal-stat-value">${fmtP(rp)}</div></div>
       <div class="modal-stat"><div class="modal-stat-label">Team Lead</div><div class="modal-stat-value" style="font-size:0.95rem;color:var(--text-secondary)">${r.tl||'—'}</div></div>
+      <div class="modal-stat"><div class="modal-stat-label">QA</div><div class="modal-stat-value" style="font-size:0.95rem;color:var(--purple)">${r.qa&&r.qa!=='N/A'?r.qa:'<span style="color:var(--text-muted);font-style:italic">N/A</span>'}</div></div>
       <div class="modal-stat"><div class="modal-stat-label">Party</div><div class="modal-stat-value" style="font-size:0.95rem;color:${r.party==='GP'?'var(--blue)':'var(--orange)'}">${r.party}</div></div>
     </div>
     ${ceF.length?`<div class="modal-section-label">🚨 CE Fails</div>${ceF.map(k=>`<div class="modal-bar-row"><div class="modal-bar-label">${k}</div><div style="font-size:0.75rem;font-weight:700;color:var(--red)">FAIL</div></div>`).join('')}`:''}
@@ -2125,6 +2208,13 @@ document.addEventListener('click', () => {
     panel.style.display = 'none';
     if (btn) btn.style.borderColor = 'var(--border)';
   }
+  // Close tenure dropdown
+  const tPanel = document.getElementById('tenureDropPanel');
+  const tBtn   = document.getElementById('tenureDropBtn');
+  if (tPanel && tPanel.style.display === 'block') {
+    tPanel.style.display = 'none';
+    if (tBtn) tBtn.style.borderColor = 'var(--border)';
+  }
 });
 function getSelectedSkills() {
   const allChk = document.getElementById('skillOpt_all');
@@ -2185,8 +2275,68 @@ function filterBySkill(skill) {
 }
 
 // ═══════════════════════════════════════════
-//  AUTO-REFRESH & COUNTDOWN
+//  TENURE MULTI-SELECT
 // ═══════════════════════════════════════════
+function toggleTenureDrop(e) {
+  e.stopPropagation();
+  const panel = document.getElementById('tenureDropPanel');
+  const btn   = document.getElementById('tenureDropBtn');
+  const open  = panel.style.display === 'block';
+  panel.style.display = open ? 'none' : 'block';
+  btn.style.borderColor = open ? 'var(--border)' : 'var(--blue)';
+}
+function getSelectedTenures() {
+  const allChk = document.getElementById('tenureOpt_all');
+  if (allChk && allChk.checked) return null; // null = all tenures
+  const checked = [...document.querySelectorAll('.tenure-chk:checked')].map(c => c.value);
+  return checked.length ? new Set(checked) : null;
+}
+function updateTenureDropBtn() {
+  const allChk  = document.getElementById('tenureOpt_all');
+  const checked = [...document.querySelectorAll('.tenure-chk:checked')];
+  const total   = document.querySelectorAll('.tenure-chk').length;
+  const btn     = document.getElementById('tenureDropBtn');
+  if (!btn) return;
+  const labels = {'0-30':'0–30 Days','31-60':'31–60 Days','61-90':'61–90 Days','91-120':'91–120 Days','121-365':'121–365 Days','365+':'365+ Days'};
+  if ((allChk && allChk.checked) || checked.length === total) {
+    btn.childNodes[0].textContent = '⏱️ All Tenures';
+  } else if (checked.length === 0) {
+    btn.childNodes[0].textContent = 'No Tenures';
+  } else if (checked.length === 1) {
+    btn.childNodes[0].textContent = labels[checked[0].value] || checked[0].value;
+  } else {
+    btn.childNodes[0].textContent = `${checked.length} Tenures`;
+  }
+}
+function onTenureAllToggle(chkEl) {
+  document.querySelectorAll('.tenure-chk').forEach(c => c.checked = false);
+  updateTenureDropBtn();
+  applyFilters();
+}
+function onTenureChkChange() {
+  const allChk = document.getElementById('tenureOpt_all');
+  if (allChk) allChk.checked = false;
+  const checked = [...document.querySelectorAll('.tenure-chk:checked')];
+  const total   = document.querySelectorAll('.tenure-chk').length;
+  if (checked.length === total && allChk) allChk.checked = true;
+  updateTenureDropBtn();
+  applyFilters();
+}
+function selectAllTenures() {
+  const allChk = document.getElementById('tenureOpt_all');
+  if (allChk) allChk.checked = true;
+  document.querySelectorAll('.tenure-chk').forEach(c => c.checked = false);
+  updateTenureDropBtn();
+  applyFilters();
+}
+function clearAllTenures() {
+  const allChk = document.getElementById('tenureOpt_all');
+  if (allChk) allChk.checked = false;
+  document.querySelectorAll('.tenure-chk').forEach(c => c.checked = false);
+  updateTenureDropBtn();
+}
+
+
 const AUTO_REFRESH_MS = 60 * 60 * 1000; // 1 hour
 let nextRefreshAt = null;
 let countdownInterval = null;
