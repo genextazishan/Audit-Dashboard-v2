@@ -91,12 +91,47 @@ body{font-family:'Segoe UI',system-ui,-apple-system,BlinkMacSystemFont,sans-seri
 .section-header h2{font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted)}
 .section-line{flex:1;height:1px;background:var(--border-muted)}
 
-/* DATA STATUS BAR */
-.data-status-bar{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 18px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-size:0.78rem}
-.ds-label{color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;font-size:0.68rem}
-.ds-file{display:flex;align-items:center;gap:6px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:0.72rem}
-.ds-file.final{border-color:rgba(63,185,80,0.4);color:var(--green)}
-.ds-file.partial{border-color:rgba(227,179,65,0.4);color:var(--orange)}
+/* DATA FRESHNESS ACCORDION */
+.dfp-accordion{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden}
+.dfp-acc-header{display:flex;align-items:center;justify-content:space-between;padding:9px 16px;cursor:pointer;user-select:none;transition:var(--transition)}
+.dfp-acc-header:hover{background:var(--bg-hover)}
+.dfp-acc-left{display:flex;align-items:center;gap:8px}
+.dfp-acc-icon{font-size:0.85rem}
+.dfp-acc-title{font-size:0.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px}
+.dfp-acc-summary{font-size:0.7rem;color:var(--text-muted);padding:2px 8px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px}
+.dfp-acc-chevron{font-size:0.65rem;color:var(--text-muted);transition:transform 0.2s}
+.dfp-acc-chevron.open{transform:rotate(180deg)}
+.dfp-acc-body{border-top:1px solid var(--border-muted);padding:12px 16px}
+
+/* Freshness table inside accordion */
+.dfp-table{width:100%;border-collapse:collapse;font-size:0.76rem}
+.dfp-table thead th{background:var(--bg-elevated);padding:6px 12px;text-align:left;font-size:0.63rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.7px;border-bottom:1px solid var(--border);white-space:nowrap}
+.dfp-table tbody tr{border-bottom:1px solid var(--border-muted);transition:var(--transition)}
+.dfp-table tbody tr:last-child{border-bottom:none}
+.dfp-table tbody tr:hover{background:var(--bg-hover)}
+.dfp-table td{padding:7px 12px;vertical-align:middle}
+.dfp-lob{font-weight:700;color:var(--text-primary);font-size:0.78rem}
+.dfp-date-val{color:var(--text-secondary);font-size:0.75rem}
+.dfp-date-val b{color:var(--text-primary)}
+.dfp-bar-wrap{display:flex;align-items:center;gap:8px}
+.dfp-mini-bar-track{width:80px;height:4px;background:var(--bg-elevated);border-radius:2px;overflow:hidden;flex-shrink:0}
+.dfp-mini-bar-fill{height:100%;border-radius:2px;transition:width 0.5s ease}
+.dfp-mini-bar-full{background:linear-gradient(90deg,var(--green),var(--teal))}
+.dfp-mini-bar-partial{background:linear-gradient(90deg,var(--orange),#f0c040)}
+.dfp-pct{font-size:0.68rem;color:var(--text-muted);white-space:nowrap}
+
+/* Matrix inside accordion */
+.dfp-matrix-wrap{overflow-x:auto}
+.dfp-matrix-table{border-collapse:collapse;font-size:0.72rem}
+.dfp-matrix-table th{padding:5px 8px;font-size:0.62rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;text-align:center;white-space:nowrap}
+.dfp-matrix-table th.lob-col{text-align:left;min-width:100px}
+.dfp-matrix-table td{padding:4px 6px;text-align:center;vertical-align:middle}
+.dfp-matrix-table td.lob-name{text-align:left;font-weight:700;color:var(--text-primary);font-size:0.75rem;padding-right:12px;white-space:nowrap}
+.dfp-cell{display:inline-flex;align-items:center;justify-content:center;min-width:60px;height:22px;border-radius:4px;font-size:0.62rem;font-weight:700;border:1px solid transparent;white-space:nowrap;padding:0 6px}
+.dfp-cell.full{background:var(--green-dim);color:var(--green);border-color:rgba(63,185,80,0.3)}
+.dfp-cell.partial{background:var(--orange-dim);color:var(--orange);border-color:rgba(227,179,65,0.3)}
+.dfp-cell.none{background:var(--bg-elevated);color:var(--text-muted);border-color:var(--border-muted)}
+.dfp-matrix-footer{margin-top:8px;font-size:0.68rem;color:var(--text-muted)}
 
 /* KPI CARDS */
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;margin-bottom:8px}
@@ -261,6 +296,57 @@ tbody td{padding:10px 14px;color:var(--text-primary);vertical-align:middle}
 .agent-err-table thead th{background:var(--bg-surface);padding:8px 12px;text-align:left;font-size:0.65rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.8px;border-bottom:1px solid var(--border)}
 .agent-err-table tbody tr{border-bottom:1px solid var(--border-muted)}
 .agent-err-table tbody td{padding:8px 12px;color:var(--text-primary)}
+
+/* TENURE CONTRIBUTION */
+.tenure-contrib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-bottom:16px}
+.tenure-card{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;transition:var(--transition)}
+.tenure-card:hover{border-color:rgba(88,166,255,0.3);box-shadow:var(--shadow)}
+.tenure-card-header{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-muted);cursor:pointer;user-select:none;transition:var(--transition)}
+.tenure-card-header:hover{background:var(--bg-hover)}
+.tenure-card-title{display:flex;align-items:center;gap:10px}
+.tenure-badge{font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:12px;background:var(--blue-dim);color:var(--blue);border:1px solid rgba(88,166,255,0.25)}
+.tenure-card-name{font-size:0.92rem;font-weight:700;color:var(--text-primary)}
+.tenure-card-audits{font-size:0.72rem;color:var(--text-muted);font-weight:600}
+.tenure-card-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;padding:14px 18px;border-bottom:1px solid var(--border-muted)}
+.tenure-metric{text-align:center;padding:6px}
+.tenure-metric + .tenure-metric{border-left:1px solid var(--border-muted)}
+.tenure-metric-val{font-size:1.3rem;font-weight:800;color:var(--text-primary);line-height:1}
+.tenure-metric-val.ce-val{color:var(--blue)}
+.tenure-metric-val.ce-below{color:var(--red);animation:glow-red 1.5s infinite}
+.tenure-metric-label{font-size:0.62rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.6px;margin-top:3px}
+.tenure-card-party-row{display:grid;grid-template-columns:1fr 1fr;gap:0;padding:10px 18px;border-bottom:1px solid var(--border-muted)}
+.tenure-party-block{padding:6px 0}
+.tenure-party-block + .tenure-party-block{border-left:1px solid var(--border-muted);padding-left:14px;margin-left:0}
+.tenure-party-label{font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px}
+.tenure-party-label.gp{color:var(--blue)}
+.tenure-party-label.gx{color:var(--orange)}
+.tenure-party-stat{font-size:0.8rem;color:var(--text-secondary)}
+.tenure-party-stat b{font-size:1rem;font-weight:800;color:var(--text-primary)}
+.tenure-drilldown{display:none;padding:0 18px 14px}
+.tenure-drilldown.open{display:block}
+.tenure-drill-tabs{display:flex;gap:6px;margin:12px 0 10px}
+.tenure-drill-tab{padding:4px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;font-size:0.72rem;font-weight:600;color:var(--text-muted);cursor:pointer;transition:var(--transition)}
+.tenure-drill-tab.active{background:var(--blue-dim);border-color:var(--blue);color:var(--blue)}
+.tenure-drill-content{}
+.tenure-agent-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-muted);transition:var(--transition);cursor:pointer}
+.tenure-agent-row:last-child{border-bottom:none}
+.tenure-agent-row:hover{background:var(--bg-hover);border-radius:var(--radius-sm);padding-left:6px}
+.tenure-agent-id{font-size:0.82rem;font-weight:700;color:var(--blue);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tenure-agent-meta{font-size:0.68rem;color:var(--text-muted);margin-top:1px}
+.tenure-agent-errors{font-size:0.82rem;font-weight:800;color:var(--red);min-width:32px;text-align:right}
+.tenure-error-pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;padding:0 0 8px 32px;border-bottom:1px solid var(--border-muted);display:none}
+.tenure-error-pills.open{display:flex}
+.tenure-err-pill{font-size:0.65rem;font-weight:600;padding:2px 8px;border-radius:10px;background:var(--red-dim);color:var(--red);border:1px solid rgba(248,81,73,0.25);display:flex;align-items:center;gap:4px}
+.tenure-err-pill .err-cnt{background:var(--red);color:#fff;border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;font-size:0.58rem;font-weight:800;flex-shrink:0}
+.tenure-expand-btn{font-size:0.7rem;color:var(--text-muted);cursor:pointer;white-space:nowrap;transition:var(--transition)}
+.tenure-expand-btn:hover{color:var(--blue)}
+.tenure-no-data{text-align:center;padding:24px;color:var(--text-muted);font-size:0.82rem}
+.tenure-summary-bar{display:flex;align-items:center;gap:8px;padding:10px 18px;background:var(--bg-elevated);border-radius:0 0 var(--radius-lg) var(--radius-lg)}
+.tenure-bar-track{flex:1;height:6px;background:var(--bg-surface);border-radius:3px;overflow:hidden}
+.tenure-bar-pass{height:100%;background:linear-gradient(90deg,var(--green),var(--teal));border-radius:3px;transition:width 0.6s ease}
+.tenure-bar-label{font-size:0.68rem;color:var(--text-muted);white-space:nowrap}
+.tenure-chevron{transition:transform 0.25s;font-size:0.75rem;color:var(--text-muted)}
+.tenure-chevron.open{transform:rotate(180deg)}
 
 /* ERROR */
 .error-banner{background:var(--red-dim);border:1px solid rgba(248,81,73,0.3);border-radius:var(--radius-md);padding:14px 18px;margin-bottom:16px;font-size:0.82rem;color:var(--red);display:none}
@@ -499,10 +585,19 @@ tr.drilldown-row td:first-child{padding-left:40px;color:var(--text-muted)}
 <!-- MAIN -->
 <div class="main" id="mainContent" style="display:none">
 
-  <!-- DATA STATUS -->
-  <div class="data-status-bar" id="dataStatusBar" style="display:none">
-    <span class="ds-label">📁 Loaded Files</span>
-    <div id="dsFiles" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+  <!-- DATA FRESHNESS PANEL -->
+  <div id="dataFreshnessPanel" style="margin-bottom:16px;display:none">
+    <div class="dfp-accordion">
+      <div class="dfp-acc-header" onclick="toggleFreshnessPanel()">
+        <div class="dfp-acc-left">
+          <span class="dfp-acc-icon">📅</span>
+          <span class="dfp-acc-title">Data Freshness</span>
+          <span class="dfp-acc-summary" id="dfpSummary"></span>
+        </div>
+        <span class="dfp-acc-chevron" id="dfpChevron">▼</span>
+      </div>
+      <div class="dfp-acc-body" id="dfpBody" style="display:none"></div>
+    </div>
   </div>
 
   <!-- KPIs -->
@@ -541,6 +636,12 @@ tr.drilldown-row td:first-child{padding-left:40px;color:var(--text-muted)}
         <div><div class="party-stat-val" id="gxRTC">—</div><div class="party-stat-label">RTC%</div></div>
       </div>
     </div>
+  </div>
+
+  <!-- TENURE CONTRIBUTION -->
+  <div class="section-header"><h2>⏱️ Tenure-Wise Contribution</h2><div class="section-line"></div></div>
+  <div class="tenure-contrib-grid" id="tenureContribGrid">
+    <div class="empty-state">Loading tenure data…</div>
   </div>
 
   <!-- CHARTS -->
@@ -1215,25 +1316,26 @@ function parseCSVToRows(text) {
 // ═══════════════════════════════════════════
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
-function parseDateToMonth(val) {
+function parseDateToDate(val) {
   if (!val) return null;
   const raw = String(val).trim();
-  // gviz-style date literal: Date(2025,2,26,...) — kept for compatibility
   const gvizMatch = raw.match(/^(?:new\s+)?Date\((\d+),(\d+),(\d+)/i);
   if (gvizMatch) {
     const d = new Date(Number(gvizMatch[1]), Number(gvizMatch[2]), Number(gvizMatch[3]));
-    return isNaN(d) ? null : MONTHS[d.getMonth()];
+    return isNaN(d) ? null : d;
   }
-  // DD-MM-YYYY (e.g. RM fallback date "23-04-2026")
   const dmyMatch = raw.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
   if (dmyMatch) {
     const d = new Date(Number(dmyMatch[3]), Number(dmyMatch[2]) - 1, Number(dmyMatch[1]));
-    return isNaN(d) ? null : MONTHS[d.getMonth()];
+    return isNaN(d) ? null : d;
   }
-  // Plain date string: MM/DD/YYYY, YYYY-MM-DD, or "4/1/2026 11:56:01 AM"
   const d = new Date(raw);
-  if (!isNaN(d) && d.getFullYear() > 2000) return MONTHS[d.getMonth()];
+  if (!isNaN(d) && d.getFullYear() > 2000) return d;
   return null;
+}
+function parseDateToMonth(val) {
+  const d = parseDateToDate(val);
+  return d ? MONTHS[d.getMonth()] : null;
 }
 
 // ═══════════════════════════════════════════
@@ -1350,7 +1452,8 @@ function parseRows(grid, map, channel, fileMonth, fileYear, defaultParty) {
       ce:     result === 'Pass' ? 100 : 0,
       empathy:(empPass + empFail) > 0 ? (empPass / (empPass + empFail) * 100) : null,
       rtcPass, rtcFail,
-      ceParams, empParams
+      ceParams, empParams,
+      dateObj: parseDateToDate(row[0]) || parseDateToDate(row[map2.dateFallback])
     });
   }
   return rows;
@@ -1419,7 +1522,8 @@ function parseCMRows(grid, map, fileMonth, fileYear) {
       ce: result === 'Pass' ? 100 : 0,
       empathy: (empPass + empFail) > 0 ? (empPass / (empPass + empFail) * 100) : null,
       rtcPass, rtcFail,
-      ceParams, empParams
+      ceParams, empParams,
+      dateObj: parseDateToDate(row[0])
     });
   }
   return rows;
@@ -1485,7 +1589,8 @@ function parseOutboundRows(grid, map, fileMonth, fileYear) {
       ce: result === 'Pass' ? 100 : 0,
       empathy: (empPass + empFail) > 0 ? (empPass / (empPass + empFail) * 100) : null,
       rtcPass, rtcFail,
-      ceParams, empParams
+      ceParams, empParams,
+      dateObj: parseDateToDate(rawDate)
     });
   }
   return rows;
@@ -1604,20 +1709,205 @@ function showMain() {
 }
 
 // ═══════════════════════════════════════════
-//  DATA STATUS BAR
+//  DATA FRESHNESS PANEL
 // ═══════════════════════════════════════════
-function updateDataStatusBar() {
-  const container = document.getElementById('dsFiles');
-  if (!loadedFiles.length) {
-    container.innerHTML = '<span style="color:var(--text-muted);font-size:0.78rem">No files loaded yet</span>';
-    return;
+
+// Returns the last day of the month for a given month name + year string
+function lastDayOfMonth(monthName, yearStr) {
+  const mIdx = MONTHS.findIndex(m => m.toLowerCase() === (monthName||'').toLowerCase());
+  if (mIdx < 0) return null;
+  const y = parseInt(yearStr) || new Date().getFullYear();
+  return new Date(y, mIdx + 1, 0); // day 0 of next month = last day of this month
+}
+
+// Compute freshness data from rawRows grouped by sheetType × month × year
+function computeFreshness() {
+  const byLOB = {};
+
+  function skillToSheet(r) {
+    const sk = (r.skill||'').toLowerCase();
+    if (sk.includes('skitto')) return 'SKITTO';
+    if (sk.includes('complaint')) return 'CM';
+    if (sk.includes('outbound')) return 'Outbound';
+    if (sk === 'rm') return 'RM';
+    if (['live chat','email','social media','gpfi & alo','skitto_email','skitto_messenger','skitto_social media','whatsapp','tier_whatsapp'].includes(sk)) return 'DIGITAL';
+    return 'INBOUND';
   }
-  container.innerHTML = loadedFiles.map(f =>
-    `<div class="ds-file ${f.isFinal ? 'final' : 'partial'}">
-      ${f.isFinal ? '✅ FINAL' : '⏳ PARTIAL'} · ${f.sheet} · ${f.month} ${f.year}
-      <span style="opacity:0.6">(${f.rows} rows)</span>
-    </div>`
-  ).join('');
+
+  rawRows.forEach(r => {
+    if (!r.dateObj || !r.month || !r.year) return;
+    const lob = skillToSheet(r);
+    if (!byLOB[lob]) byLOB[lob] = {};
+    const mk = r.month + '_' + r.year;
+    if (!byLOB[lob][mk]) byLOB[lob][mk] = {
+      month: r.month, year: r.year,
+      latestDate: null,
+      lastDay: lastDayOfMonth(r.month, r.year)
+    };
+    const entry = byLOB[lob][mk];
+    if (!entry.latestDate || r.dateObj > entry.latestDate) {
+      entry.latestDate = r.dateObj;
+    }
+  });
+
+  // Status: compare latest date in col A vs last day of that month
+  Object.values(byLOB).forEach(lobMap => {
+    Object.values(lobMap).forEach(entry => {
+      if (entry.latestDate && entry.lastDay) {
+        const ld = entry.latestDate;
+        const last = entry.lastDay;
+        entry.status = (ld.getFullYear() === last.getFullYear() &&
+                        ld.getMonth()    === last.getMonth()    &&
+                        ld.getDate()     === last.getDate())
+          ? 'full' : 'partial';
+      } else {
+        entry.status = entry.latestDate ? 'partial' : 'none';
+      }
+    });
+  });
+
+  return byLOB;
+}
+
+function formatDateShort(d) {
+  if (!d) return '—';
+  return d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+}
+
+const LOB_NAMES = {
+  'INBOUND':  'Inbound',
+  'DIGITAL':  'Digital',
+  'SKITTO':   'Skitto 121',
+  'RM':       'RM',
+  'CM':       'Complaint Mgmt',
+  'Outbound': 'Outbound',
+};
+
+let dfpOpen = false;
+function toggleFreshnessPanel() {
+  dfpOpen = !dfpOpen;
+  document.getElementById('dfpBody').style.display = dfpOpen ? 'block' : 'none';
+  const chv = document.getElementById('dfpChevron');
+  if (chv) chv.classList.toggle('open', dfpOpen);
+}
+
+function updateDataStatusBar() {
+  const panel = document.getElementById('dataFreshnessPanel');
+  if (!panel) return;
+  if (!rawRows.length) { panel.style.display = 'none'; return; }
+  panel.style.display = 'block';
+
+  const freshness = computeFreshness();
+  const selectedMonths = getSelectedMonths();
+  const yearSel = document.getElementById('fYear').value;
+
+  // Build summary chip for header
+  const allEntries = Object.values(freshness).flatMap(lm => Object.values(lm));
+  const partial = allEntries.filter(e => e.status === 'partial').length;
+  const full    = allEntries.filter(e => e.status === 'full').length;
+  const sumEl   = document.getElementById('dfpSummary');
+  if (sumEl) {
+    sumEl.textContent = partial > 0
+      ? `⏳ ${partial} LOB${partial>1?'s':''} in progress`
+      : full > 0 ? `✅ All up to date` : '';
+    sumEl.style.color = partial > 0 ? 'var(--orange)' : 'var(--green)';
+    sumEl.style.borderColor = partial > 0 ? 'rgba(227,179,65,0.4)' : 'rgba(63,185,80,0.4)';
+    sumEl.style.background = partial > 0 ? 'var(--orange-dim)' : 'var(--green-dim)';
+  }
+
+  const body = document.getElementById('dfpBody');
+  if (!body) return;
+
+  if (selectedMonths === null) {
+    body.innerHTML = renderFreshnessMatrix(freshness, yearSel);
+  } else {
+    body.innerHTML = renderFreshnessTable(freshness, [...selectedMonths], yearSel);
+  }
+}
+
+function renderFreshnessTable(freshness, monthsInView, yearSel) {
+  const lobOrder = ['INBOUND','DIGITAL','SKITTO','RM','CM','Outbound'];
+  const rows = [];
+  lobOrder.forEach(lob => {
+    if (!freshness[lob]) return;
+    monthsInView.forEach(mon => {
+      let entry = null;
+      if (yearSel !== 'all') {
+        entry = freshness[lob][mon + '_' + yearSel];
+      } else {
+        const found = Object.entries(freshness[lob]).find(([k]) => k.toLowerCase().startsWith(mon.toLowerCase()+'_'));
+        if (found) entry = found[1];
+      }
+      if (!entry) return;
+      rows.push({ lob, entry });
+    });
+  });
+
+  if (!rows.length) return '<div style="color:var(--text-muted);font-size:0.78rem;padding:4px 0">No data for selected month(s).</div>';
+
+  const tbody = rows.map(({ lob, entry }) => {
+    const pct = (entry.latestDate && entry.lastDay)
+      ? Math.min(100, Math.round(entry.latestDate.getDate() / entry.lastDay.getDate() * 100))
+      : (entry.status === 'full' ? 100 : 0);
+    const barClass = entry.status === 'full' ? 'dfp-mini-bar-full' : 'dfp-mini-bar-partial';
+    const lastDayStr = entry.lastDay ? ` / ${entry.lastDay.getDate()} ${MONTHS[entry.lastDay.getMonth()].slice(0,3)}` : '';
+    const dateCell = entry.latestDate
+      ? `<span class="dfp-date-val"><b>${formatDateShort(entry.latestDate)}</b>${lastDayStr}</span>`
+      : `<span class="dfp-date-val" style="color:var(--text-muted)">—</span>`;
+    return `<tr>
+      <td class="dfp-lob">${LOB_NAMES[lob]||lob}</td>
+      <td>${dateCell}</td>
+      <td><div class="dfp-bar-wrap">
+        <div class="dfp-mini-bar-track"><div class="dfp-mini-bar-fill ${barClass}" style="width:${pct}%"></div></div>
+        <span class="dfp-pct">${pct}%</span>
+      </div></td>
+    </tr>`;
+  }).join('');
+
+  return `<table class="dfp-table">
+    <thead><tr><th>LOB</th><th>Latest Date in Data</th><th>Month Coverage</th></tr></thead>
+    <tbody>${tbody}</tbody>
+  </table>`;
+}
+
+function renderFreshnessMatrix(freshness, yearSel) {
+  const allKeys = new Set();
+  Object.values(freshness).forEach(lm => Object.keys(lm).forEach(k => allKeys.add(k)));
+  const sortedKeys = [...allKeys].sort((a, b) => {
+    const [ma,ya] = a.split('_'), [mb,yb] = b.split('_');
+    return new Date(`${ma} 1, ${ya}`) - new Date(`${mb} 1, ${yb}`);
+  });
+  const filteredKeys = yearSel === 'all' ? sortedKeys : sortedKeys.filter(k => k.endsWith('_'+yearSel));
+  if (!filteredKeys.length) return '<div style="color:var(--text-muted);font-size:0.78rem">No data.</div>';
+
+  const lobOrder = ['INBOUND','DIGITAL','SKITTO','RM','CM','Outbound'];
+  const activeLOBs = lobOrder.filter(lob => freshness[lob]);
+
+  const headerCols = filteredKeys.map(mk => `<th>${mk.split('_')[0].slice(0,3)} ${mk.split('_')[1]}</th>`).join('');
+
+  let full=0, partial=0, none=0;
+  const matrixRows = activeLOBs.map(lob => {
+    const cells = filteredKeys.map(mk => {
+      const entry = freshness[lob]?.[mk];
+      if (!entry || !entry.latestDate) { none++; return `<td><div class="dfp-cell none">—</div></td>`; }
+      if (entry.status === 'full') {
+        full++;
+        return `<td><div class="dfp-cell full" title="Latest: ${formatDateShort(entry.latestDate)}">✅ ${entry.latestDate.getDate()} ${MONTHS[entry.latestDate.getMonth()].slice(0,3)}</div></td>`;
+      } else {
+        partial++;
+        return `<td><div class="dfp-cell partial" title="Latest: ${formatDateShort(entry.latestDate)}">⏳ ${entry.latestDate.getDate()} ${MONTHS[entry.latestDate.getMonth()].slice(0,3)}</div></td>`;
+      }
+    }).join('');
+    return `<tr><td class="lob-name">${LOB_NAMES[lob]||lob}</td>${cells}</tr>`;
+  }).join('');
+
+  return `<div class="dfp-matrix-wrap">
+    <table class="dfp-matrix-table">
+      <thead><tr><th class="lob-col">LOB</th>${headerCols}</tr></thead>
+      <tbody>${matrixRows}</tbody>
+    </table>
+    <div class="dfp-matrix-footer">🟢 ${full} complete &nbsp;·&nbsp; 🟡 ${partial} partial &nbsp;·&nbsp; ⬜ ${none} no data</div>
+  </div>`;
 }
 
 // ═══════════════════════════════════════════
@@ -1660,6 +1950,7 @@ function applyFilters() {
   updateCharts();
   renderSkillCards();
   updateLeaderboards();
+  renderTenureContribution();
   renderTable();
 }
 
@@ -1912,6 +2203,225 @@ function showParamAgents(param, type) {
 }
 function closeParamModal() { document.getElementById('paramAgentModal').classList.remove('open'); }
 function closeParamModalOutside(e) { if (e.target===document.getElementById('paramAgentModal')) closeParamModal(); }
+
+// ═══════════════════════════════════════════
+//  TENURE-WISE CONTRIBUTION
+// ═══════════════════════════════════════════
+const TENURE_LABELS = {
+  '0-30':    '0–30 Days',
+  '31-60':   '31–60 Days',
+  '61-90':   '61–90 Days',
+  '91-120':  '91–120 Days',
+  '121-365': '121–365 Days',
+  '365+':    '365+ Days'
+};
+const TENURE_ORDER = ['0-30','31-60','61-90','91-120','121-365','365+'];
+
+function buildTenureAgg(rows) {
+  // { tenureKey → { audits, pass, fail, gp:{audits,pass,fail,agents:{}}, genex:{...} } }
+  const ta = {};
+  rows.forEach(r => {
+    const tk = r.tenure;
+    if (!tk) return; // skip rows with no tenure
+    if (!ta[tk]) ta[tk] = {
+      audits:0, pass:0, fail:0,
+      gp:   { audits:0, pass:0, fail:0, agents:{} },
+      genex:{ audits:0, pass:0, fail:0, agents:{} }
+    };
+    const t = ta[tk];
+    t.audits++; if (r.result==='Pass') t.pass++; else t.fail++;
+    const pk = r.party === 'GP' ? 'gp' : 'genex';
+    const p = t[pk];
+    p.audits++; if (r.result==='Pass') p.pass++; else p.fail++;
+    const aid = r.agentId;
+    if (!p.agents[aid]) p.agents[aid] = { id:aid, tl:r.tl, audits:0, errors:0, ceErrors:{} };
+    p.agents[aid].audits++;
+    if (r.result==='Fail') {
+      p.agents[aid].errors++;
+      // collect which CE params failed
+      Object.entries(r.ceParams).forEach(([param, val]) => {
+        if (val === 'Fail') {
+          p.agents[aid].ceErrors[param] = (p.agents[aid].ceErrors[param] || 0) + 1;
+        }
+      });
+    }
+  });
+  return ta;
+}
+
+let tenureExpandedAgents = {}; // key: tenureKey+'|'+partyKey → Set of expanded agentIds
+
+function renderTenureContribution() {
+  const grid = document.getElementById('tenureContribGrid');
+  const ta = buildTenureAgg(filteredRows);
+  const activeKeys = TENURE_ORDER.filter(k => ta[k] && ta[k].audits > 0);
+
+  if (!activeKeys.length) {
+    grid.innerHTML = '<div class="empty-state">No tenure data available for current filter.<br><span style="font-size:0.75rem">Tenure data is available for Inbound, Digital, RM, and Outbound sheets.</span></div>';
+    return;
+  }
+
+  grid.innerHTML = activeKeys.map(tk => {
+    const t = ta[tk];
+    const ceAll  = t.audits > 0 ? (t.pass / t.audits * 100) : null;
+    const gpCE   = t.gp.audits > 0 ? (t.gp.pass / t.gp.audits * 100) : null;
+    const gxCE   = t.genex.audits > 0 ? (t.genex.pass / t.genex.audits * 100) : null;
+    const tgt    = 95; // default threshold for colour coding
+    const passPct = t.audits > 0 ? (t.pass / t.audits * 100) : 0;
+
+    return `
+    <div class="tenure-card" id="tc_${tk}">
+      <div class="tenure-card-header" onclick="toggleTenureCard('${tk}')">
+        <div class="tenure-card-title">
+          <span class="tenure-badge">${TENURE_LABELS[tk]||tk}</span>
+          <div>
+            <div class="tenure-card-name">${t.audits} Audits</div>
+            <div class="tenure-card-audits">${t.pass} Pass · ${t.fail} Fail</div>
+          </div>
+        </div>
+        <span class="tenure-chevron" id="tcc_${tk}">▼</span>
+      </div>
+
+      <div class="tenure-card-metrics">
+        <div class="tenure-metric">
+          <div class="tenure-metric-val ce-val ${ceAll!==null&&ceAll<tgt?'ce-below':''}">${ceAll!==null?ceAll.toFixed(1)+'%':'—'}</div>
+          <div class="tenure-metric-label">CE% (All)</div>
+        </div>
+        <div class="tenure-metric">
+          <div class="tenure-metric-val" style="color:var(--blue)">${gpCE!==null?gpCE.toFixed(1)+'%':'—'}</div>
+          <div class="tenure-metric-label">GP CE%</div>
+        </div>
+        <div class="tenure-metric">
+          <div class="tenure-metric-val" style="color:var(--orange)">${gxCE!==null?gxCE.toFixed(1)+'%':'—'}</div>
+          <div class="tenure-metric-label">GENEX CE%</div>
+        </div>
+      </div>
+
+      <div class="tenure-card-party-row">
+        <div class="tenure-party-block">
+          <div class="tenure-party-label gp">🔵 GP</div>
+          <div class="tenure-party-stat"><b>${t.gp.audits}</b> audits &nbsp;·&nbsp; <b>${t.gp.fail}</b> errors</div>
+        </div>
+        <div class="tenure-party-block" style="padding-left:14px">
+          <div class="tenure-party-label gx">🟠 GENEX</div>
+          <div class="tenure-party-stat"><b>${t.genex.audits}</b> audits &nbsp;·&nbsp; <b>${t.genex.fail}</b> errors</div>
+        </div>
+      </div>
+
+      <div class="tenure-summary-bar">
+        <div class="tenure-bar-label">Pass rate</div>
+        <div class="tenure-bar-track"><div class="tenure-bar-pass" style="width:${passPct.toFixed(1)}%"></div></div>
+        <div class="tenure-bar-label">${passPct.toFixed(1)}%</div>
+      </div>
+
+      <div class="tenure-drilldown" id="tdd_${tk}">
+        <div class="tenure-drill-tabs">
+          <button class="tenure-drill-tab active" id="ttab_${tk}_gp"   onclick="switchTenureTab('${tk}','gp')">🔵 GP Agents (${t.gp.fail} errors)</button>
+          <button class="tenure-drill-tab"        id="ttab_${tk}_genex" onclick="switchTenureTab('${tk}','genex')">🟠 GENEX Agents (${t.genex.fail} errors)</button>
+        </div>
+        <div class="tenure-drill-content" id="tdc_${tk}"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Init expanded state tracking
+  activeKeys.forEach(tk => {
+    if (!tenureExpandedAgents[tk+'|gp'])    tenureExpandedAgents[tk+'|gp']    = new Set();
+    if (!tenureExpandedAgents[tk+'|genex']) tenureExpandedAgents[tk+'|genex'] = new Set();
+  });
+}
+
+function toggleTenureCard(tk) {
+  const dd  = document.getElementById('tdd_'+tk);
+  const chv = document.getElementById('tcc_'+tk);
+  const isOpen = dd.classList.contains('open');
+  dd.classList.toggle('open', !isOpen);
+  chv.classList.toggle('open', !isOpen);
+  if (!isOpen) {
+    // Render initial tab (GP) when first opened
+    renderTenureDrillAgents(tk, 'gp');
+  }
+}
+
+function switchTenureTab(tk, partyKey) {
+  ['gp','genex'].forEach(pk => {
+    document.getElementById('ttab_'+tk+'_'+pk)?.classList.toggle('active', pk===partyKey);
+  });
+  renderTenureDrillAgents(tk, partyKey);
+}
+
+function renderTenureDrillAgents(tk, partyKey) {
+  const ta = buildTenureAgg(filteredRows);
+  const container = document.getElementById('tdc_'+tk);
+  if (!container) return;
+  const partyData = ta[tk]?.[partyKey];
+  if (!partyData || !partyData.audits) {
+    container.innerHTML = '<div class="tenure-no-data">No data for this party in this tenure band.</div>';
+    return;
+  }
+
+  const agents = Object.values(partyData.agents)
+    .filter(a => a.errors > 0)
+    .sort((a,b) => b.errors - a.errors);
+
+  if (!agents.length) {
+    container.innerHTML = '<div class="tenure-no-data">✅ No CE errors found for this party in this tenure band.</div>';
+    return;
+  }
+
+  const expandedSet = tenureExpandedAgents[tk+'|'+partyKey] || new Set();
+  const maxErrors = agents[0]?.errors || 1;
+
+  container.innerHTML = agents.map((a, i) => {
+    const isExpanded = expandedSet.has(a.id);
+    const errEntries = Object.entries(a.ceErrors).sort((x,y) => y[1]-x[1]);
+    const barW = Math.max(8, (a.errors/maxErrors*100)).toFixed(0);
+    const rankCls = i===0?'r1':i===1?'r2':i===2?'r3':'rN';
+
+    const pillsHtml = errEntries.length
+      ? errEntries.map(([param, cnt]) =>
+          `<span class="tenure-err-pill"><span class="err-cnt">${cnt}</span>${param}</span>`
+        ).join('')
+      : '<span style="color:var(--text-muted);font-size:0.72rem">No specific param data</span>';
+
+    return `
+      <div class="tenure-agent-row" onclick="toggleTenureAgentExpand('${tk}','${partyKey}','${CSS.escape(a.id)}',this)">
+        <div class="rank-badge ${rankCls}" style="flex-shrink:0">${i+1}</div>
+        <div style="flex:1;min-width:0">
+          <div class="tenure-agent-id">${a.id}</div>
+          <div class="tenure-agent-meta">TL: ${a.tl||'—'} · ${a.audits} audits</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+          <div style="width:60px;height:4px;background:var(--bg-elevated);border-radius:2px;overflow:hidden">
+            <div style="height:100%;width:${barW}%;background:linear-gradient(90deg,var(--red),var(--pink));border-radius:2px"></div>
+          </div>
+          <div class="tenure-agent-errors">${a.errors}</div>
+          <div class="tenure-expand-btn" title="Show error breakdown">${isExpanded?'▲':'▼'}</div>
+        </div>
+      </div>
+      <div class="tenure-error-pills ${isExpanded?'open':''}" id="tep_${tk}_${partyKey}_${a.id.replace(/[^a-zA-Z0-9]/g,'_')}">
+        ${pillsHtml}
+      </div>`;
+  }).join('');
+}
+
+function toggleTenureAgentExpand(tk, partyKey, agentId, rowEl) {
+  const key = tk+'|'+partyKey;
+  if (!tenureExpandedAgents[key]) tenureExpandedAgents[key] = new Set();
+  const set = tenureExpandedAgents[key];
+  const pillId = 'tep_'+tk+'_'+partyKey+'_'+agentId.replace(/[^a-zA-Z0-9]/g,'_');
+  const pills = document.getElementById(pillId);
+  const btn   = rowEl.querySelector('.tenure-expand-btn');
+  if (set.has(agentId)) {
+    set.delete(agentId);
+    pills?.classList.remove('open');
+    if (btn) btn.textContent = '▼';
+  } else {
+    set.add(agentId);
+    pills?.classList.add('open');
+    if (btn) btn.textContent = '▲';
+  }
+}
 
 // ═══════════════════════════════════════════
 //  LEADERBOARDS
