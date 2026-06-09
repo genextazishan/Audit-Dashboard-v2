@@ -3280,18 +3280,39 @@ function selectNotifMonth(month, btn) {
   btn.classList.add('selected');
   notifSelectedMonth = month;
 
-  // Compute preview stats
+  // Compute preview stats — only agents with at least one fail
   const monthRows = rawRows.filter(r => r.month === month);
-  const agentSkillGroups = {};
+
+  // Group by agent to check for fails
+  const agentFailCheck = {};
   monthRows.forEach(r => {
+    const agentKey = (r.agentId || '').toLowerCase();
+    if (!agentFailCheck[agentKey]) agentFailCheck[agentKey] = false;
+    if (
+      (r.empFail && r.empFail > 0) ||
+      (r.ceFail  && r.ceFail  > 0) ||
+      (r.errorRemarks && String(r.errorRemarks).trim() !== '')
+    ) {
+      agentFailCheck[agentKey] = true;
+    }
+  });
+
+  // Only rows belonging to agents who have at least one fail
+  const failMonthRows = monthRows.filter(r => agentFailCheck[(r.agentId || '').toLowerCase()]);
+
+  const agentSkillGroups = {};
+  failMonthRows.forEach(r => {
     const key = (r.agentId || '').toLowerCase() + '||' + (r.skill || '');
     if (!agentSkillGroups[key]) agentSkillGroups[key] = { agentId: r.agentId, skill: r.skill };
   });
   const groupKeys = Object.keys(agentSkillGroups);
-  const uniqueAgents = new Set(monthRows.map(r => (r.agentId||'').toLowerCase())).size;
-  const uniqueSkills = new Set(monthRows.map(r => r.skill)).size;
+  const uniqueAgents = new Set(failMonthRows.map(r => (r.agentId||'').toLowerCase())).size;
+  const uniqueSkills = new Set(failMonthRows.map(r => r.skill)).size;
 
-  document.getElementById('notifAgentCount').textContent = uniqueAgents;
+  const totalAgents = new Set(monthRows.map(r => (r.agentId||'').toLowerCase())).size;
+  const allPassCount = totalAgents - uniqueAgents;
+
+  document.getElementById('notifAgentCount').textContent = uniqueAgents + (allPassCount > 0 ? ` (${allPassCount} all-pass excluded)` : '');
   document.getElementById('notifEmailCount').textContent = groupKeys.length;
   document.getElementById('notifSelectedMonth').textContent = month;
   document.getElementById('notifSkillCount').textContent = uniqueSkills;
