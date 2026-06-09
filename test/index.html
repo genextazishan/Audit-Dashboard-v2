@@ -3289,9 +3289,9 @@ function selectNotifMonth(month, btn) {
     const agentKey = (r.agentId || '').toLowerCase();
     if (!agentFailCheck[agentKey]) agentFailCheck[agentKey] = false;
     if (
+      r.result === 'Fail' ||
       (r.empFail && r.empFail > 0) ||
-      (r.ceFail  && r.ceFail  > 0) ||
-      (r.errorRemarks && String(r.errorRemarks).trim() !== '')
+      (r.rtcFail && r.rtcFail > 0)
     ) {
       agentFailCheck[agentKey] = true;
     }
@@ -3595,7 +3595,7 @@ async function triggerNotifications() {
 
   let sent = 0, failed = 0, skipped = 0, skippedAllPass = 0;
 
-  // Filter: only keep agents who have at least one fail (empFail, ceFail, or errorRemarks)
+  // Filter: only keep agents who have at least one fail (result=Fail, empFail, or rtcFail)
   const failKeys = allKeys.filter(k => {
     const { rows } = agentSkillMap[k];
     return rows.some(r =>
