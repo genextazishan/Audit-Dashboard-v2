@@ -3283,36 +3283,28 @@ function selectNotifMonth(month, btn) {
   // Compute preview stats — only agents with at least one fail
   const monthRows = rawRows.filter(r => r.month === month);
 
-  // Group by agent to check for fails
-  const agentFailCheck = {};
+  // Find agents that have at least one fail row
+  const failAgentSet = new Set();
   monthRows.forEach(r => {
-    const agentKey = (r.agentId || '').toLowerCase();
-    if (!agentFailCheck[agentKey]) agentFailCheck[agentKey] = false;
-    if (
-      r.result === 'Fail' ||
-      (r.empFail && r.empFail > 0) ||
-      (r.rtcFail && r.rtcFail > 0)
-    ) {
-      agentFailCheck[agentKey] = true;
+    if (r.result === 'Fail' || (r.empFail && r.empFail > 0)) {
+      failAgentSet.add((r.agentId || '').toLowerCase());
     }
   });
 
-  // Only rows belonging to agents who have at least one fail
-  const failMonthRows = monthRows.filter(r => agentFailCheck[(r.agentId || '').toLowerCase()]);
-
+  // Only count agent+skill groups belonging to fail agents
+  const failMonthRows = monthRows.filter(r => failAgentSet.has((r.agentId || '').toLowerCase()));
   const agentSkillGroups = {};
   failMonthRows.forEach(r => {
     const key = (r.agentId || '').toLowerCase() + '||' + (r.skill || '');
     if (!agentSkillGroups[key]) agentSkillGroups[key] = { agentId: r.agentId, skill: r.skill };
   });
   const groupKeys = Object.keys(agentSkillGroups);
-  const uniqueAgents = new Set(failMonthRows.map(r => (r.agentId||'').toLowerCase())).size;
+  const uniqueAgents = failAgentSet.size;
   const uniqueSkills = new Set(failMonthRows.map(r => r.skill)).size;
-
   const totalAgents = new Set(monthRows.map(r => (r.agentId||'').toLowerCase())).size;
-  const allPassCount = totalAgents - uniqueAgents;
+  const skippedCount = totalAgents - uniqueAgents;
 
-  document.getElementById('notifAgentCount').textContent = uniqueAgents + (allPassCount > 0 ? ` (${allPassCount} all-pass excluded)` : '');
+  document.getElementById('notifAgentCount').textContent = uniqueAgents + (skippedCount > 0 ? ' (' + skippedCount + ' all-pass skipped)' : '');
   document.getElementById('notifEmailCount').textContent = groupKeys.length;
   document.getElementById('notifSelectedMonth').textContent = month;
   document.getElementById('notifSkillCount').textContent = uniqueSkills;
@@ -3584,7 +3576,7 @@ async function triggerNotifications() {
   }
 
   const allKeys = Object.keys(agentSkillMap);
-  log(`📊 Found ${allKeys.length} agents in audit data for ${notifSelectedMonth}`);
+  log(`📊 Found ${allKeys.length} agents in audit data`);
   progressBar.style.width = '30%';
 
   if (!allKeys.length) {
@@ -3593,23 +3585,17 @@ async function triggerNotifications() {
     return;
   }
 
-  let sent = 0, failed = 0, skipped = 0, skippedAllPass = 0;
-
-  // Filter: only keep agents who have at least one fail (result=Fail, empFail, or rtcFail)
+  // Only email agents who have at least one fail (ceFail, empFail, or errorRemarks)
   const failKeys = allKeys.filter(k => {
-    const { rows } = agentSkillMap[k];
-    return rows.some(r =>
-      (r.empFail && r.empFail > 0) ||
-      (r.ceFail  && r.ceFail  > 0) ||
-      (r.errorRemarks && r.errorRemarks.trim() !== '')
+    return agentSkillMap[k].rows.some(r =>
+      (r.ceFail > 0) || (r.empFail > 0) || (r.errorRemarks && r.errorRemarks.trim() !== '')
     );
   });
+  const allPassSkipped = allKeys.length - failKeys.length;
+  if (allPassSkipped > 0) log(`✅ Skipping ${allPassSkipped} agent(s) with all-pass results`, '#3fb950');
+  log(`📧 Will email ${failKeys.length} agent(s) with at least one fail`, '#58a6ff');
 
-  const passOnlyCount = allKeys.length - failKeys.length;
-  if (passOnlyCount > 0) {
-    log(`✅ Skipping ${passOnlyCount} agent(s) with all-pass results — no email needed`, '#3fb950');
-  }
-  log(`📧 Sending emails to ${failKeys.length} agent(s) with one or more fails`, '#58a6ff');
+  let sent = 0, failed = 0, skipped = 0;
 
   for (let idx = 0; idx < failKeys.length; idx++) {
     const k = failKeys[idx];
@@ -3653,9 +3639,9 @@ async function triggerNotifications() {
   }
 
   progressBar.style.width = '100%';
-  progressText.textContent = `Done! ✅ ${sent} sent · ❌ ${failed} failed · ⏭ ${skipped} skipped · 🟢 ${passOnlyCount} all-pass (no email)`;
-  log(`\n🎉 Complete: ${sent} sent, ${failed} failed, ${skipped} skipped (no email on file), ${passOnlyCount} all-pass agents not emailed`, '#58a6ff');
-  showToast(`🔔 Notifications: ${sent} sent, ${failed} failed · ${passOnlyCount} all-pass skipped`, sent > 0 ? 'success' : 'error');
+  progressText.textContent = `Done! ✅ ${sent} sent · ❌ ${failed} failed · ⏭ ${skipped} skipped · 🟢 ${allPassSkipped} all-pass not emailed`;
+  log(`\n🎉 Complete: ${sent} sent, ${failed} failed, ${skipped} skipped (no email), ${allPassSkipped} all-pass excluded`, '#58a6ff');
+  showToast(`🔔 Notifications: ${sent} sent, ${failed} failed · ${allPassSkipped} all-pass skipped`, sent > 0 ? 'success' : 'error');
   sendBtn.disabled = false;
 }
 
