@@ -3291,21 +3291,16 @@ function selectNotifMonth(month, btn) {
     }
   });
 
-  // Only count agent+skill groups belonging to fail agents
+  // One email per agent (all skills compiled into one email)
   const failMonthRows = monthRows.filter(r => failAgentSet.has((r.agentId || '').toLowerCase()));
-  const agentSkillGroups = {};
-  failMonthRows.forEach(r => {
-    const key = (r.agentId || '').toLowerCase() + '||' + (r.skill || '');
-    if (!agentSkillGroups[key]) agentSkillGroups[key] = { agentId: r.agentId, skill: r.skill };
-  });
-  const groupKeys = Object.keys(agentSkillGroups);
   const uniqueAgents = failAgentSet.size;
   const uniqueSkills = new Set(failMonthRows.map(r => r.skill)).size;
   const totalAgents = new Set(monthRows.map(r => (r.agentId||'').toLowerCase())).size;
   const skippedCount = totalAgents - uniqueAgents;
 
+  // Emails to send = one per fail agent (not per agent+skill)
   document.getElementById('notifAgentCount').textContent = uniqueAgents + (skippedCount > 0 ? ' (' + skippedCount + ' all-pass skipped)' : '');
-  document.getElementById('notifEmailCount').textContent = groupKeys.length;
+  document.getElementById('notifEmailCount').textContent = uniqueAgents;
   document.getElementById('notifSelectedMonth').textContent = month;
   document.getElementById('notifSkillCount').textContent = uniqueSkills;
   document.getElementById('notifPreviewSection').style.display = 'block';
