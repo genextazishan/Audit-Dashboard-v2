@@ -3090,9 +3090,10 @@ function extractComments(row, map) {
 const DIGITAL_ERROR_REMARKS_COL = 213; // HR column (0-indexed)
 
 // ── BUILD EMAIL HTML BODY ──────────────────────────────────────────────────────
-function buildEmailHTML(agentName, agentId, skill, auditRows, month) {
+function buildEmailHTML(agentName, agentId, auditRows, month) {
   // auditRows: array of { contactDate, evalDate, empPass, empFail, cePass, ceFail, party, comments[], errorRemarks }
-  const skillGroup = getSkillChannelGroup(skill);
+  const skills = [...new Set(auditRows.map(r => r.skill).filter(Boolean))];
+  const skillGroup = getSkillChannelGroup(skills[0] || '');
 
   const tableRows = auditRows.map(r => {
     const fmtDate = d => {
@@ -3100,6 +3101,7 @@ function buildEmailHTML(agentName, agentId, skill, auditRows, month) {
       try { return new Date(d).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
       catch { return String(d); }
     };
+    const skillPill = `<span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:rgba(88,166,255,0.12);color:#58a6ff;border:1px solid rgba(88,166,255,0.3)">${r.skill||'—'}</span>`;
     const empPillP = `<span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:rgba(63,185,80,0.15);color:#3fb950;border:1px solid rgba(63,185,80,0.3)">${r.empPass}</span>`;
     const empPillF = r.empFail > 0
       ? `<span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:rgba(248,81,73,0.15);color:#f85149;border:1px solid rgba(248,81,73,0.3)">${r.empFail}</span>`
@@ -3113,6 +3115,7 @@ function buildEmailHTML(agentName, agentId, skill, auditRows, month) {
     const partyBorder = r.party === 'GP' ? 'rgba(88,166,255,0.3)' : 'rgba(227,179,65,0.3)';
     const partyPill = `<span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:${partyBg};color:${partyColor};border:1px solid ${partyBorder}">${r.party||'—'}</span>`;
     return `<tr>
+      <td style="border:1px solid rgba(48,54,61,0.6);padding:9px 10px;vertical-align:middle;text-align:center">${skillPill}</td>
       <td style="border:1px solid rgba(48,54,61,0.6);padding:9px 10px;color:#c9d1d9;font-size:11px;vertical-align:middle">${fmtDate(r.contactDate)}</td>
       <td style="border:1px solid rgba(48,54,61,0.6);padding:9px 10px;color:#c9d1d9;font-size:11px;vertical-align:middle">${fmtDate(r.evalDate)}</td>
       <td style="border:1px solid rgba(48,54,61,0.6);padding:9px 10px;vertical-align:middle;text-align:center">${empPillP}</td>
@@ -3169,7 +3172,7 @@ function buildEmailHTML(agentName, agentId, skill, auditRows, month) {
       <div style="width:34px;height:34px;background:linear-gradient(135deg,#58a6ff,#79c0ff);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#0d1117">GP</div>
       <div style="font-size:11px;font-weight:700;color:#58a6ff;text-transform:uppercase;letter-spacing:1.5px">Genex Infosys · QA Audit System</div>
     </div>
-    <div style="font-size:15px;font-weight:700;color:#e6edf3;margin-bottom:6px">Daily Audit Findings · ${month} · ${skill} · ${agentId}</div>
+    <div style="font-size:15px;font-weight:700;color:#e6edf3;margin-bottom:6px">Daily Audit Findings · ${month} · ${agentId}</div>
     <div style="font-size:11px;color:#6e7681">This is an automated audit notification. Please review your findings below.</div>
   </div>
 
@@ -3177,7 +3180,7 @@ function buildEmailHTML(agentName, agentId, skill, auditRows, month) {
   <div style="padding:20px 28px 0">
     <p style="font-size:13px;color:#8b949e;line-height:1.7;margin:0">
       Dear <strong style="color:#e6edf3">${agentName}</strong>,<br><br>
-      Please find below your audit findings for <strong style="color:#58a6ff">${skill}</strong> during <strong style="color:#58a6ff">${month}</strong>.
+      Please find below your audit findings for <strong style="color:#58a6ff">${month}</strong> across all your audited skills.
       Kindly review the parameter-level feedback carefully and take note of areas requiring improvement.
       Your team lead and the QA/training teams have been copied on this communication.
     </p>
@@ -3196,6 +3199,7 @@ function buildEmailHTML(agentName, agentId, skill, auditRows, month) {
     <table style="width:100%;border-collapse:collapse;font-size:11px">
       <thead>
         <tr>
+          <th style="background:rgba(255,255,255,0.04);border:1px solid rgba(48,54,61,0.8);padding:8px 10px;text-align:center;color:#6e7681;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;white-space:nowrap">Skill</th>
           <th style="background:rgba(255,255,255,0.04);border:1px solid rgba(48,54,61,0.8);padding:8px 10px;text-align:left;color:#6e7681;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;white-space:nowrap">Contact Date</th>
           <th style="background:rgba(255,255,255,0.04);border:1px solid rgba(48,54,61,0.8);padding:8px 10px;text-align:left;color:#6e7681;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;white-space:nowrap">Eval Date</th>
           <th style="background:rgba(255,255,255,0.04);border:1px solid rgba(48,54,61,0.8);padding:8px 10px;text-align:center;color:#6e7681;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;white-space:nowrap">Emp Pass</th>
@@ -3222,7 +3226,7 @@ function buildEmailHTML(agentName, agentId, skill, auditRows, month) {
   <!-- Footer -->
   <div style="background:rgba(13,17,23,0.6);border-top:1px solid rgba(48,54,61,0.5);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
     <span style="font-size:10px;color:#484f58">GP ↔ GENEX Quality Assurance · Auto-generated · Do not reply</span>
-    <span style="font-size:10px;font-weight:700;color:#58a6ff;background:rgba(88,166,255,0.1);border:1px solid rgba(88,166,255,0.2);padding:3px 10px;border-radius:20px">${skill} · ${month}</span>
+    <span style="font-size:10px;font-weight:700;color:#58a6ff;background:rgba(88,166,255,0.1);border:1px solid rgba(88,166,255,0.2);padding:3px 10px;border-radius:20px">${skills.join(' · ')} · ${month}</span>
   </div>
 
 </div>
@@ -3552,14 +3556,14 @@ async function triggerNotifications() {
         if (igCol < row.length) errorRemarks = String(row[igCol]||'').trim();
       }
 
-      const key = agentId.toLowerCase() + '||' + skill;
-      if (!agentSkillMap[key]) agentSkillMap[key] = { agentId, skill, rows: [] };
-      agentSkillMap[key].rows.push({ contactDate, evalDate, empPass, empFail, cePass, ceFail, party, comments, errorRemarks });
+      const key = agentId.toLowerCase();
+      if (!agentSkillMap[key]) agentSkillMap[key] = { agentId, rows: [] };
+      agentSkillMap[key].rows.push({ skill, contactDate, evalDate, empPass, empFail, cePass, ceFail, party, comments, errorRemarks });
     }
   }
 
   const allKeys = Object.keys(agentSkillMap);
-  log(`📊 Found ${allKeys.length} agent-skill combinations to notify`);
+  log(`📊 Found ${allKeys.length} agents in audit data for ${notifSelectedMonth}`);
   progressBar.style.width = '30%';
 
   if (!allKeys.length) {
@@ -3568,48 +3572,69 @@ async function triggerNotifications() {
     return;
   }
 
-  let sent = 0, failed = 0, skipped = 0;
+  let sent = 0, failed = 0, skipped = 0, skippedAllPass = 0;
 
-  for (let idx = 0; idx < allKeys.length; idx++) {
-    const k = allKeys[idx];
-    const { agentId, skill, rows } = agentSkillMap[k];
+  // Filter: only keep agents who have at least one fail (empFail, ceFail, or errorRemarks)
+  const failKeys = allKeys.filter(k => {
+    const { rows } = agentSkillMap[k];
+    return rows.some(r =>
+      (r.empFail && r.empFail > 0) ||
+      (r.ceFail  && r.ceFail  > 0) ||
+      (r.errorRemarks && r.errorRemarks.trim() !== '')
+    );
+  });
+
+  const passOnlyCount = allKeys.length - failKeys.length;
+  if (passOnlyCount > 0) {
+    log(`✅ Skipping ${passOnlyCount} agent(s) with all-pass results — no email needed`, '#3fb950');
+  }
+  log(`📧 Sending emails to ${failKeys.length} agent(s) with one or more fails`, '#58a6ff');
+
+  for (let idx = 0; idx < failKeys.length; idx++) {
+    const k = failKeys[idx];
+    const { agentId, rows } = agentSkillMap[k];
 
     // Look up employee
     const empData = empMap[agentId.toLowerCase()];
     if (!empData || !empData.email) {
-      log(`⚠️ [SKIP] ${agentId} (${skill}) — not found in employee directory`, '#6e7681');
+      log(`⚠️ [SKIP] ${agentId} — not found in employee directory`, '#6e7681');
       skipped++;
       continue;
     }
 
     const agentName = empData.name || agentId;
     const toEmail   = empData.email;
-    const ccEmails  = getCCForSkill(skill).join(', ');
+    // Collect all unique skills for this agent for CC logic (use most specific)
+    const skills    = [...new Set(rows.map(r => r.skill))];
+    // Merge CC lists across all skills
+    const ccSet     = new Set();
+    skills.forEach(s => getCCForSkill(s).forEach(e => ccSet.add(e)));
+    const ccEmails  = [...ccSet].join(', ');
     const dateStr   = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
-    const subject   = `Daily Audit Findings - ${dateStr} - ${skill} - ${agentId}`;
-    const htmlBody  = buildEmailHTML(agentName, agentId, skill, rows, notifSelectedMonth);
+    const subject   = `Audit Findings - ${dateStr} - ${notifSelectedMonth} - ${agentId}`;
+    const htmlBody  = buildEmailHTML(agentName, agentId, rows, notifSelectedMonth);
 
     try {
       await sendViaGmailAPI(toEmail, ccEmails, subject, htmlBody);
-      log(`✅ Sent → ${agentName} (${agentId}) · ${skill} · ${toEmail}`, '#3fb950');
+      log(`✅ Sent → ${agentName} (${agentId}) · ${skills.join(', ')} · ${toEmail}`, '#3fb950');
       sent++;
     } catch(e) {
-      log(`❌ Failed → ${agentName} (${agentId}) · ${skill} — ${e.message || 'unknown error'}`, '#f85149');
+      log(`❌ Failed → ${agentName} (${agentId}) — ${e.message || 'unknown error'}`, '#f85149');
       failed++;
     }
 
     // Throttle: ~3 emails/sec — well within Gmail API quota
     await new Promise(r => setTimeout(r, 350));
 
-    const pct = 30 + Math.round(((idx + 1) / allKeys.length) * 65);
+    const pct = 30 + Math.round(((idx + 1) / failKeys.length) * 65);
     progressBar.style.width = pct + '%';
-    progressText.textContent = `${idx+1} / ${allKeys.length} processed…`;
+    progressText.textContent = `${idx+1} / ${failKeys.length} processed…`;
   }
 
   progressBar.style.width = '100%';
-  progressText.textContent = `Done! ✅ ${sent} sent · ❌ ${failed} failed · ⏭ ${skipped} skipped`;
-  log(`\n🎉 Complete: ${sent} sent, ${failed} failed, ${skipped} skipped (no email on file)`, '#58a6ff');
-  showToast(`🔔 Notifications: ${sent} sent, ${failed} failed`, sent > 0 ? 'success' : 'error');
+  progressText.textContent = `Done! ✅ ${sent} sent · ❌ ${failed} failed · ⏭ ${skipped} skipped · 🟢 ${passOnlyCount} all-pass (no email)`;
+  log(`\n🎉 Complete: ${sent} sent, ${failed} failed, ${skipped} skipped (no email on file), ${passOnlyCount} all-pass agents not emailed`, '#58a6ff');
+  showToast(`🔔 Notifications: ${sent} sent, ${failed} failed · ${passOnlyCount} all-pass skipped`, sent > 0 ? 'success' : 'error');
   sendBtn.disabled = false;
 }
 
