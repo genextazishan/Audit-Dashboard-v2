@@ -322,6 +322,8 @@ tbody td{padding:10px 14px;color:var(--text-primary);vertical-align:middle}
 .tenure-party-label.gx{color:var(--orange)}
 .tenure-party-stat{font-size:0.8rem;color:var(--text-secondary)}
 .tenure-party-stat b{font-size:1rem;font-weight:800;color:var(--text-primary)}
+.tenure-party-metrics-mini{display:flex;gap:8px;flex-wrap:wrap;font-size:0.68rem;color:var(--text-muted);margin-bottom:5px}
+.tenure-party-metrics-mini b{color:var(--text-primary);font-weight:700}
 .tenure-drilldown{display:none;padding:0 18px 14px}
 .tenure-drilldown.open{display:block}
 .tenure-drill-tabs{display:flex;gap:6px;margin:12px 0 10px}
@@ -1777,7 +1779,7 @@ const LOB_NAMES = {
   'GPFI & ALO':             'GPFI & ALO',
   '158':                    '158',
   'Retailer':               'Retailer',
-  'KCP':                    'KCP',
+  'KCP':                    'KACP',
   'RM':                     'RM',
   'Tier_Whatsapp':          'Tier_Whatsapp',
   'Skitto_121':             'Skitto_121',
@@ -2234,21 +2236,25 @@ const TENURE_LABELS = {
 const TENURE_ORDER = ['0-30','31-60','61-90','91-120','121-365','365+'];
 
 function buildTenureAgg(rows) {
-  // { tenureKey → { audits, pass, fail, gp:{audits,pass,fail,agents:{}}, genex:{...} } }
+  // { tenureKey → { audits, pass, fail, empP, empF, rtcP, rtcF, gp:{...}, genex:{...} } }
   const ta = {};
   rows.forEach(r => {
     const tk = r.tenure;
     if (!tk) return; // skip rows with no tenure
     if (!ta[tk]) ta[tk] = {
-      audits:0, pass:0, fail:0,
-      gp:   { audits:0, pass:0, fail:0, agents:{} },
-      genex:{ audits:0, pass:0, fail:0, agents:{} }
+      audits:0, pass:0, fail:0, empP:0, empF:0, rtcP:0, rtcF:0,
+      gp:   { audits:0, pass:0, fail:0, empP:0, empF:0, rtcP:0, rtcF:0, agents:{} },
+      genex:{ audits:0, pass:0, fail:0, empP:0, empF:0, rtcP:0, rtcF:0, agents:{} }
     };
     const t = ta[tk];
     t.audits++; if (r.result==='Pass') t.pass++; else t.fail++;
+    t.empP += r.empPass||0; t.empF += r.empFail||0;
+    t.rtcP += r.rtcPass||0; t.rtcF += r.rtcFail||0;
     const pk = r.party === 'GP' ? 'gp' : 'genex';
     const p = t[pk];
     p.audits++; if (r.result==='Pass') p.pass++; else p.fail++;
+    p.empP += r.empPass||0; p.empF += r.empFail||0;
+    p.rtcP += r.rtcPass||0; p.rtcF += r.rtcFail||0;
     const aid = r.agentId;
     if (!p.agents[aid]) p.agents[aid] = { id:aid, tl:r.tl, audits:0, errors:0, ceErrors:{} };
     p.agents[aid].audits++;
@@ -2282,8 +2288,15 @@ function renderTenureContribution() {
     const ceAll  = t.audits > 0 ? (t.pass / t.audits * 100) : null;
     const gpCE   = t.gp.audits > 0 ? (t.gp.pass / t.gp.audits * 100) : null;
     const gxCE   = t.genex.audits > 0 ? (t.genex.pass / t.genex.audits * 100) : null;
+    const empAll = (t.empP + t.empF) > 0 ? (t.empP / (t.empP + t.empF) * 100) : null;
+    const gpEmp  = (t.gp.empP + t.gp.empF) > 0 ? (t.gp.empP / (t.gp.empP + t.gp.empF) * 100) : null;
+    const gxEmp  = (t.genex.empP + t.genex.empF) > 0 ? (t.genex.empP / (t.genex.empP + t.genex.empF) * 100) : null;
+    const rtcAll = (t.rtcP + t.rtcF) > 0 ? (t.rtcP / (t.rtcP + t.rtcF) * 100) : null;
+    const gpRTC  = (t.gp.rtcP + t.gp.rtcF) > 0 ? (t.gp.rtcP / (t.gp.rtcP + t.gp.rtcF) * 100) : null;
+    const gxRTC  = (t.genex.rtcP + t.genex.rtcF) > 0 ? (t.genex.rtcP / (t.genex.rtcP + t.genex.rtcF) * 100) : null;
     const tgt    = 95; // default threshold for colour coding
     const passPct = t.audits > 0 ? (t.pass / t.audits * 100) : 0;
+    const fmtM = v => v!==null ? v.toFixed(1)+'%' : '—';
 
     return `
     <div class="tenure-card" id="tc_${tk}">
@@ -2300,26 +2313,36 @@ function renderTenureContribution() {
 
       <div class="tenure-card-metrics">
         <div class="tenure-metric">
-          <div class="tenure-metric-val ce-val ${ceAll!==null&&ceAll<tgt?'ce-below':''}">${ceAll!==null?ceAll.toFixed(1)+'%':'—'}</div>
+          <div class="tenure-metric-val ce-val ${ceAll!==null&&ceAll<tgt?'ce-below':''}">${fmtM(ceAll)}</div>
           <div class="tenure-metric-label">CE% (All)</div>
         </div>
         <div class="tenure-metric">
-          <div class="tenure-metric-val" style="color:var(--blue)">${gpCE!==null?gpCE.toFixed(1)+'%':'—'}</div>
-          <div class="tenure-metric-label">GP CE%</div>
+          <div class="tenure-metric-val" style="color:var(--purple)">${fmtM(empAll)}</div>
+          <div class="tenure-metric-label">Empathy% (All)</div>
         </div>
         <div class="tenure-metric">
-          <div class="tenure-metric-val" style="color:var(--orange)">${gxCE!==null?gxCE.toFixed(1)+'%':'—'}</div>
-          <div class="tenure-metric-label">GENEX CE%</div>
+          <div class="tenure-metric-val" style="color:var(--teal)">${fmtM(rtcAll)}</div>
+          <div class="tenure-metric-label">RTC% (All)</div>
         </div>
       </div>
 
       <div class="tenure-card-party-row">
         <div class="tenure-party-block">
           <div class="tenure-party-label gp">🔵 GP</div>
+          <div class="tenure-party-metrics-mini">
+            <span>CE <b>${fmtM(gpCE)}</b></span>
+            <span>Emp <b>${fmtM(gpEmp)}</b></span>
+            <span>RTC <b>${fmtM(gpRTC)}</b></span>
+          </div>
           <div class="tenure-party-stat"><b>${t.gp.audits}</b> audits &nbsp;·&nbsp; <b>${t.gp.fail}</b> errors</div>
         </div>
         <div class="tenure-party-block" style="padding-left:14px">
           <div class="tenure-party-label gx">🟠 GENEX</div>
+          <div class="tenure-party-metrics-mini">
+            <span>CE <b>${fmtM(gxCE)}</b></span>
+            <span>Emp <b>${fmtM(gxEmp)}</b></span>
+            <span>RTC <b>${fmtM(gxRTC)}</b></span>
+          </div>
           <div class="tenure-party-stat"><b>${t.genex.audits}</b> audits &nbsp;·&nbsp; <b>${t.genex.fail}</b> errors</div>
         </div>
       </div>
