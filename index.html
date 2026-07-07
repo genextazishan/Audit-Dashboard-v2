@@ -809,7 +809,7 @@ tr.drilldown-row td:first-child{padding-left:40px;color:var(--text-muted)}
 
 </div>
 
-<div class="footer">GP ↔ GENEX Audit Dashboard · Quality Assurance</div>
+<div class="footer">GP ↔ GENEX Audit Dashboard · Quality Assurance Platform · Data stored on GitHub</div>
 
 </div><!-- /app-shell -->
 
@@ -1729,26 +1729,32 @@ function switchView(view) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Buckets each row into one of six LOBs. Only Inbound / Outbound / Digital carry a
-// CE-topic column (per the sheet layout); CM, Skitto and RM don't, so they're
-// simply excluded from the topic-level breakdown further down.
-const CE_LOB_DEFS = [
-  { key: 'Inbound',  label: 'Inbound',                       hasTopic: true  },
-  { key: 'Outbound', label: 'Outbound',                      hasTopic: true  },
-  { key: 'Digital',  label: 'Digital',                       hasTopic: true  },
-  { key: 'CM',       label: 'Complaint Management (CM)',     hasTopic: false },
-  { key: 'Skitto',   label: 'Skitto',                        hasTopic: false },
-  { key: 'RM',       label: 'RM',                            hasTopic: false },
+// Detailed, skill-level LOB breakdown — one row per actual line of business rather
+// than the coarse Inbound/Outbound/Digital/CM/Skitto/RM buckets. Order and display
+// labels mirror LOB_ORDER / LOB_NAMES used elsewhere in this dashboard (e.g. the
+// Data Freshness panel), so "KCP" shows as "KACP" and "Second Tier" as "2nd Tier"
+// for consistency with the rest of the app. HR Helpline is appended at the end —
+// it wasn't in the requested list but is included so no audited row is silently
+// dropped from the table.
+const CE_LOB_ORDER = [
+  'Mass','Premium','KCP','158','Retailer','RM','Second Tier','Tier_Whatsapp',
+  'Skitto_121','Complaint Management','Outbound','Live Chat','Email','Social Media',
+  'GPFI & ALO','Skitto_Email','Skitto_Messenger','Skitto_Social Media','Whatsapp',
+  'HR Helpline'
 ];
-function lobOf(row) {
-  const skill = (row.skill || '').toLowerCase();
-  if (skill === 'complaint management') return 'CM';
-  if (skill === 'outbound') return 'Outbound';
-  if (skill === 'rm') return 'RM';
-  if (skill.includes('skitto')) return 'Skitto';
-  if (row.channel === 'Digital') return 'Digital';
-  return 'Inbound';
-}
+// Whether a CE-topic (error reason) column exists for that LOB's data source:
+//  - Mass/Premium/KCP/158/Retailer/GPFI & ALO/Second Tier/Tier_Whatsapp → Inbound sheet, column HH
+//  - Outbound → Outbound sheet, column HA
+//  - Live Chat/Email/Social Media/Whatsapp/Skitto_Email/Skitto_Messenger/Skitto_Social Media/HR Helpline → Digital sheet, column HS
+//  - Complaint Management, RM, Skitto_121 → no topic column in their source sheets
+const CE_SKILL_HAS_TOPIC = {
+  'Mass': true, 'Premium': true, 'KCP': true, '158': true, 'Retailer': true,
+  'GPFI & ALO': true, 'Second Tier': true, 'Tier_Whatsapp': true,
+  'Outbound': true,
+  'Live Chat': true, 'Email': true, 'Social Media': true, 'Whatsapp': true,
+  'Skitto_Email': true, 'Skitto_Messenger': true, 'Skitto_Social Media': true, 'HR Helpline': true,
+  'Complaint Management': false, 'RM': false, 'Skitto_121': false,
+};
 const CE_EXCLUDED_TOPICS = ['improper response', 'no response'];
 function isExcludedCETopic(topic) {
   if (!topic) return false;
@@ -1827,13 +1833,14 @@ function renderKPIsCE(rows) {
 }
 
 function renderLOBTableCE(rows) {
-  const rowsHTML = CE_LOB_DEFS.map(def => {
-    const lobRows = rows.filter(r => lobOf(r) === def.key);
+  const rowsHTML = CE_LOB_ORDER.map(key => {
+    const label = LOB_NAMES[key] || key;
+    const lobRows = rows.filter(r => r.skill === key);
     const gp = lobRows.filter(r => r.party === 'GP');
     const gx = lobRows.filter(r => r.party === 'GENEX');
     const all = ceStats(lobRows), gpS = ceStats(gp), gxS = ceStats(gx);
     return `<tr>
-      <td><div class="lob-name">${def.label}</div><div class="lob-sub">${all.total} audits</div></td>
+      <td><div class="lob-name">${label}</div><div class="lob-sub">${all.total} audits</div></td>
       <td class="num">${gpS.total}</td>
       <td>${ceCellHTML(gpS.ce)}</td>
       <td class="num">${gxS.total}</td>
@@ -1848,13 +1855,15 @@ function renderLOBTableCE(rows) {
 }
 
 function renderAdjTableCE(rows) {
-  const rowsHTML = CE_LOB_DEFS.map(def => {
-    const lobRows = rows.filter(r => lobOf(r) === def.key);
+  const rowsHTML = CE_LOB_ORDER.map(key => {
+    const label = LOB_NAMES[key] || key;
+    const hasTopic = !!CE_SKILL_HAS_TOPIC[key];
+    const lobRows = rows.filter(r => r.skill === key);
     const raw = ceStats(lobRows);
     const adj = ceStatsAdjusted(lobRows);
     const delta = (raw.ce !== null && adj.ce !== null) ? (adj.ce - raw.ce) : null;
     return `<tr>
-      <td><div class="lob-name">${def.label}</div><div class="lob-sub">${def.hasTopic ? 'Topic data available' : 'No topic column — shown as-is'}</div></td>
+      <td><div class="lob-name">${label}</div><div class="lob-sub">${hasTopic ? 'Topic data available' : 'No topic column — shown as-is'}</div></td>
       <td>${ceCellHTML(raw.ce)}</td>
       <td>${ceCellHTML(adj.ce)}</td>
       <td class="num">${delta === null ? '—' : (delta >= 0 ? '+' : '') + delta.toFixed(2) + ' pts'}</td>
@@ -1866,9 +1875,10 @@ function renderAdjTableCE(rows) {
 }
 
 function renderTopicTableCE(rows) {
-  const topicLOBs = CE_LOB_DEFS.filter(d => d.hasTopic);
-  const blocks = topicLOBs.map(def => {
-    const fails = rows.filter(r => lobOf(r) === def.key && r.result === 'Fail');
+  const topicKeys = CE_LOB_ORDER.filter(key => CE_SKILL_HAS_TOPIC[key]);
+  const blocks = topicKeys.map(key => {
+    const label = LOB_NAMES[key] || key;
+    const fails = rows.filter(r => r.skill === key && r.result === 'Fail');
     const counts = {};
     fails.forEach(r => {
       const t = r.ceTopic || 'Uncategorized / Blank';
@@ -1877,10 +1887,10 @@ function renderTopicTableCE(rows) {
     const total = fails.length;
     const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0, 8);
     if (!sorted.length) {
-      return `<tr><td><div class="lob-name">${def.label}</div></td><td colspan="3" class="na-text">No fail records in current filter</td></tr>`;
+      return `<tr><td><div class="lob-name">${label}</div></td><td colspan="3" class="na-text">No fail records in current filter</td></tr>`;
     }
     return sorted.map(([topic, count], i) => `<tr>
-      <td>${i === 0 ? `<div class="lob-name">${def.label}</div><div class="lob-sub">${total} total fails</div>` : ''}</td>
+      <td>${i === 0 ? `<div class="lob-name">${label}</div><div class="lob-sub">${total} total fails</div>` : ''}</td>
       <td>${isExcludedCETopic(topic) ? `<span class="ce-pill ce-warn">${topic}</span>` : topic}</td>
       <td class="num">${count}</td>
       <td class="num">${total > 0 ? (count/total*100).toFixed(1) : '0.0'}%</td>
