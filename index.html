@@ -40,6 +40,29 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{font-family:'Segoe UI',system-ui,-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg-base);color:var(--text-primary);min-height:100vh;line-height:1.5}
+
+/* SIDEBAR */
+.sidebar{position:fixed;top:0;left:0;height:100vh;width:214px;background:var(--bg-surface);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:200;padding:0 0 16px}
+.sidebar-brand{display:flex;align-items:center;gap:10px;padding:18px 18px;border-bottom:1px solid var(--border-muted)}
+.sidebar-brand-logo{width:32px;height:32px;background:linear-gradient(135deg,var(--blue),var(--cyan));border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.sidebar-brand-text{font-size:0.78rem;font-weight:700;color:var(--text-primary);line-height:1.25}
+.sidebar-nav{display:flex;flex-direction:column;gap:2px;padding:14px 10px;flex:1}
+.sidebar-link{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-sm);color:var(--text-secondary);text-decoration:none;font-size:0.84rem;font-weight:600;cursor:pointer;border:1px solid transparent;background:transparent;width:100%;text-align:left;transition:var(--transition)}
+.sidebar-link svg{flex-shrink:0;opacity:0.85}
+.sidebar-link:hover{background:var(--bg-hover);color:var(--text-primary)}
+.sidebar-link.active{background:var(--blue-dim);border-color:rgba(88,166,255,0.3);color:var(--blue)}
+.sidebar-link.active svg{opacity:1}
+.sidebar-refresh{margin-top:auto}
+.sidebar-refresh .sidebar-link.spinning svg{animation:spin 0.8s linear infinite}
+.sidebar-foot{padding:12px 18px 4px;font-size:0.65rem;color:var(--text-muted);border-top:1px solid var(--border-muted)}
+.app-shell{margin-left:214px}
+@media(max-width:900px){
+  .sidebar{width:100%;height:auto;position:relative;flex-direction:row;align-items:center;border-right:none;border-bottom:1px solid var(--border)}
+  .sidebar-brand{border-bottom:none;padding:12px 14px}
+  .sidebar-nav{flex-direction:row;padding:8px;flex:1;overflow-x:auto}
+  .sidebar-foot{display:none}
+  .app-shell{margin-left:0}
+}
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-track{background:var(--bg-base)}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
@@ -155,6 +178,26 @@ body{font-family:'Segoe UI',system-ui,-apple-system,BlinkMacSystemFont,sans-seri
 .badge-red{background:var(--red-dim);color:var(--red);border:1px solid rgba(248,81,73,0.3)}
 .badge-blue{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(88,166,255,0.3)}
 .badge-orange{background:var(--orange-dim);color:var(--orange);border:1px solid rgba(227,179,65,0.3)}
+
+/* CE BREAKDOWN VIEW */
+.tbl-wrap{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-md);overflow-x:auto;margin-bottom:8px}
+table.data-tbl{width:100%;border-collapse:collapse;font-size:0.8rem;min-width:720px}
+table.data-tbl thead th{background:var(--bg-elevated);padding:10px 14px;text-align:left;font-size:0.65rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.7px;border-bottom:1px solid var(--border);white-space:nowrap}
+table.data-tbl tbody tr{border-bottom:1px solid var(--border-muted);transition:var(--transition)}
+table.data-tbl tbody tr:last-child{border-bottom:none}
+table.data-tbl tbody tr:hover{background:var(--bg-hover)}
+table.data-tbl td{padding:9px 14px;vertical-align:middle}
+table.data-tbl td.num{text-align:right;font-variant-numeric:tabular-nums}
+.lob-name{font-weight:700;color:var(--text-primary)}
+.lob-sub{font-size:0.68rem;color:var(--text-muted)}
+.ce-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:0.76rem;font-weight:700}
+.ce-good{background:var(--green-dim);color:var(--green)}
+.ce-warn{background:var(--orange-dim);color:var(--orange)}
+.ce-bad{background:var(--red-dim);color:var(--red)}
+.na-text{color:var(--text-muted);font-size:0.75rem}
+.bar-track{width:70px;height:5px;background:var(--bg-elevated);border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:8px}
+.bar-fill{height:100%;border-radius:3px}
+.section-note{font-size:0.76rem;color:var(--text-muted);margin-bottom:16px;line-height:1.6}
 
 /* PARTY CARDS */
 .party-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
@@ -385,6 +428,29 @@ tr.drilldown-row td:first-child{padding-left:40px;color:var(--text-muted)}
 </head>
 <body>
 
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-logo">🔍</div>
+    <div class="sidebar-brand-text">GP ↔ GENEX<br>Audit Dashboard</div>
+  </div>
+  <div class="sidebar-nav">
+    <button class="sidebar-link active" id="navDashboardBtn" onclick="switchView('dashboard')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+      Dashboard
+    </button>
+    <button class="sidebar-link" id="navCEBreakdownBtn" onclick="switchView('ce')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.1-2.8-2.8L7 14"/></svg>
+      CE Breakdown
+    </button>
+  </div>
+  <div class="sidebar-refresh">
+    <div class="sidebar-foot" id="nextRefreshCountdownSidebar">Next refresh in 01:00:00</div>
+  </div>
+</div>
+
+<div class="app-shell">
+
 <!-- LOADING -->
 <div id="loadingOverlay">
   <div class="loader-ring"></div>
@@ -400,8 +466,8 @@ tr.drilldown-row td:first-child{padding-left:40px;color:var(--text-muted)}
   <div class="header-left">
     <div class="header-logo">🔍</div>
     <div>
-      <div class="header-title">GP ↔ GENEX AUDIT DASHBOARD</div>
-      <div class="header-sub">Quality Assurance · Live Executive Dashboard · <span id="lastRefresh">—</span></div>
+      <div class="header-title" id="headerTitle">GP ↔ GENEX AUDIT DASHBOARD</div>
+      <div class="header-sub" id="headerSub">Quality Assurance · Live Executive Dashboard · <span id="lastRefresh">—</span></div>
     </div>
   </div>
   <div class="header-right">
@@ -422,7 +488,7 @@ tr.drilldown-row td:first-child{padding-left:40px;color:var(--text-muted)}
 </div>
 
 <!-- FILTER BAR -->
-<div class="filter-bar">
+<div class="filter-bar" id="dashboardFilterBar">
   <div class="filter-group" style="position:relative">
     <span class="filter-label">Month</span>
     <div id="monthMultiWrap" style="position:relative;min-width:160px">
@@ -721,7 +787,31 @@ tr.drilldown-row td:first-child{padding-left:40px;color:var(--text-muted)}
   </div>
 </div>
 
+<!-- CE BREAKDOWN VIEW -->
+<div class="main" id="ceBreakdownContent" style="display:none">
+
+  <div class="section-header"><h2>Overall CE%</h2><div class="section-line"></div></div>
+  <div class="section-note">
+    CE% = share of audited interactions with no critical error (Pass ÷ Total). "Adjusted CE%" recomputes this after excluding
+    <b>Improper Response</b> and <b>No Response</b> topic fails — i.e. where we'd stand if those two reasons weren't counted as critical errors.
+    Adjustment only applies to LOBs where a CE-topic column exists (Inbound, Outbound, Digital); CM, Skitto and RM don't have a topic column yet, so their fails are counted as-is in the adjusted figures too.
+  </div>
+  <div class="kpi-grid" id="kpiGridCE"></div>
+
+  <div class="section-header"><h2>CE% by LOB — GP vs GENEX</h2><div class="section-line"></div></div>
+  <div class="tbl-wrap"><table class="data-tbl" id="lobTableCE"></table></div>
+
+  <div class="section-header"><h2>Adjusted CE% by LOB (excl. Improper Response &amp; No Response)</h2><div class="section-line"></div></div>
+  <div class="tbl-wrap"><table class="data-tbl" id="adjTableCE"></table></div>
+
+  <div class="section-header"><h2>Top CE Error Topics (Inbound / Outbound / Digital)</h2><div class="section-line"></div></div>
+  <div class="tbl-wrap"><table class="data-tbl" id="topicTableCE"></table></div>
+
+</div>
+
 <div class="footer">GP ↔ GENEX Audit Dashboard · Quality Assurance Platform · Data stored on GitHub</div>
+
+</div><!-- /app-shell -->
 
 <!-- MODALS -->
 <div class="modal-overlay" id="agentModal" onclick="closeModalOutside(event)">
@@ -770,6 +860,7 @@ const INBOUND_MAP = {
   empPass:203, empFail:204,
   rtcPass:null, rtcFail:null,
   month:null,
+  ceTopic:215, // HH column — free-text CE error topic (e.g. "Improper Response", "No Response")
   emp:{
     'Greetings':28,'A&U':31,'Clarity':34,'Listening':37,
     'Time Mgt':40,'Personalization':43,'Tone':46,'Closing':49
@@ -792,6 +883,7 @@ const DIGITAL_MAP = {
   empPass:217, empFail:218,
   rtcPass:222, rtcFail:223,
   month:null,
+  ceTopic:226, // HS column — free-text CE error topic
   emp:{
     'Warm Welcome':43,'A&U':46,'Eff Comm':49,'Attentive':52,
     'Time Mgt':55,'Personalization':58,'Emotional':61,'Closing':64
@@ -934,6 +1026,7 @@ const OUTBOUND_MAP = {
   empFail:197,
   rtcPass:null, rtcFail:null,
   month:null,
+  ceTopic:208, // HA column — free-text CE error topic
   emp:{
     'Proactive Greeting':28,
     'Ack & Clarification':31,
@@ -985,6 +1078,7 @@ const INBOUND_MAP_LEGACY = {
   empPass:203, empFail:204,
   rtcPass:210, rtcFail:211,
   month:null,
+  ceTopic:215, // HH column — free-text CE error topic (may be absent in early legacy files)
   emp:{
     'Greetings':28,'A&U':31,'Clarity':34,'Listening':37,
     'Time Mgt':40,'Personalization':43,'Tone':46,'Closing':49
@@ -1016,6 +1110,7 @@ const DIGITAL_MAP_LEGACY = {
   empPass:217, empFail:218,
   rtcPass:222, rtcFail:223,
   month:null,
+  ceTopic:226, // HS column — free-text CE error topic (may be absent in early legacy files)
   emp:{
     'Warm Welcome':43,'A&U':46,'Eff Comm':49,'Attentive':52,
     'Time Mgt':55,'Personalization':58,'Emotional':61,'Closing':64
@@ -1443,6 +1538,15 @@ function parseRows(grid, map, channel, fileMonth, fileYear, defaultParty) {
       empParams[k] = v === 'pass' ? 'Pass' : v === 'fail' ? 'Fail' : null;
     });
 
+    // CE error topic (free-text reason column) — only mapped for Inbound/Outbound/Digital.
+    // Null for LOBs without this column (CM, Skitto, RM) so they're simply excluded from
+    // topic-level breakdowns while still counting toward overall/LOB-wise CE%.
+    let ceTopic = null;
+    if (map2.ceTopic !== null && map2.ceTopic !== undefined && map2.ceTopic < row.length) {
+      const t = String(row[map2.ceTopic] || '').trim();
+      if (t) ceTopic = t;
+    }
+
     rows.push({
       month, year, party, skill,
       channel: skill === 'Tier_Whatsapp' ? 'Inbound' : channel,
@@ -1455,7 +1559,7 @@ function parseRows(grid, map, channel, fileMonth, fileYear, defaultParty) {
       ce:     result === 'Pass' ? 100 : 0,
       empathy:(empPass + empFail) > 0 ? (empPass / (empPass + empFail) * 100) : null,
       rtcPass, rtcFail,
-      ceParams, empParams,
+      ceParams, empParams, ceTopic,
       dateObj: parseDateToDate(row[0]) || parseDateToDate(row[map2.dateFallback])
     });
   }
@@ -1525,7 +1629,7 @@ function parseCMRows(grid, map, fileMonth, fileYear) {
       ce: result === 'Pass' ? 100 : 0,
       empathy: (empPass + empFail) > 0 ? (empPass / (empPass + empFail) * 100) : null,
       rtcPass, rtcFail,
-      ceParams, empParams,
+      ceParams, empParams, ceTopic: null, // CM has no CE topic column — excluded from topic breakdown
       dateObj: parseDateToDate(row[0])
     });
   }
@@ -1579,6 +1683,12 @@ function parseOutboundRows(grid, map, fileMonth, fileYear) {
       empParams[k] = v === 'pass' ? 'Pass' : v === 'fail' ? 'Fail' : null;
     });
 
+    let ceTopic = null;
+    if (map.ceTopic !== null && map.ceTopic !== undefined && map.ceTopic < row.length) {
+      const t = String(row[map.ceTopic] || '').trim();
+      if (t) ceTopic = t;
+    }
+
     rows.push({
       month, year: fileYear, party,
       skill: 'Outbound',
@@ -1592,7 +1702,7 @@ function parseOutboundRows(grid, map, fileMonth, fileYear) {
       ce: result === 'Pass' ? 100 : 0,
       empathy: (empPass + empFail) > 0 ? (empPass / (empPass + empFail) * 100) : null,
       rtcPass, rtcFail,
-      ceParams, empParams,
+      ceParams, empParams, ceTopic,
       dateObj: parseDateToDate(rawDate)
     });
   }
@@ -1600,9 +1710,192 @@ function parseOutboundRows(grid, map, fileMonth, fileYear) {
 }
 
 
+// ═══════════════════════════════════════════
+//  CE BREAKDOWN VIEW (same-page "book page" switch — no navigation/reload)
+// ═══════════════════════════════════════════
+function switchView(view) {
+  const isCE = view === 'ce';
+  document.getElementById('navDashboardBtn').classList.toggle('active', !isCE);
+  document.getElementById('navCEBreakdownBtn').classList.toggle('active', isCE);
+  // The filter bar (Month, Year, Party, Channel, Skill/LOB, Result, Tenure, Search) is
+  // shared across both views — it stays visible and simply drives whichever view is active.
+  document.getElementById('mainContent').style.display = isCE ? 'none' : 'block';
+  document.getElementById('ceBreakdownContent').style.display = isCE ? 'block' : 'none';
+  document.getElementById('headerTitle').textContent = isCE ? 'CE BREAKDOWN' : 'GP ↔ GENEX AUDIT DASHBOARD';
+  document.getElementById('headerSub').innerHTML = isCE
+    ? 'Critical Error Analysis · By LOB &amp; Party · <span id="lastRefresh2"></span>'
+    : 'Quality Assurance · Live Executive Dashboard · <span id="lastRefresh">—</span>';
+  if (isCE) renderCEBreakdown();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Buckets each row into one of six LOBs. Only Inbound / Outbound / Digital carry a
+// CE-topic column (per the sheet layout); CM, Skitto and RM don't, so they're
+// simply excluded from the topic-level breakdown further down.
+const CE_LOB_DEFS = [
+  { key: 'Inbound',  label: 'Inbound',                       hasTopic: true  },
+  { key: 'Outbound', label: 'Outbound',                      hasTopic: true  },
+  { key: 'Digital',  label: 'Digital',                       hasTopic: true  },
+  { key: 'CM',       label: 'Complaint Management (CM)',     hasTopic: false },
+  { key: 'Skitto',   label: 'Skitto',                        hasTopic: false },
+  { key: 'RM',       label: 'RM',                            hasTopic: false },
+];
+function lobOf(row) {
+  const skill = (row.skill || '').toLowerCase();
+  if (skill === 'complaint management') return 'CM';
+  if (skill === 'outbound') return 'Outbound';
+  if (skill === 'rm') return 'RM';
+  if (skill.includes('skitto')) return 'Skitto';
+  if (row.channel === 'Digital') return 'Digital';
+  return 'Inbound';
+}
+const CE_EXCLUDED_TOPICS = ['improper response', 'no response'];
+function isExcludedCETopic(topic) {
+  if (!topic) return false;
+  const t = topic.toLowerCase();
+  return CE_EXCLUDED_TOPICS.some(ex => t.includes(ex));
+}
+function ceStats(rows) {
+  const pass = rows.filter(r => r.result === 'Pass').length;
+  const total = rows.length;
+  return { pass, fail: total - pass, total, ce: total > 0 ? (pass / total * 100) : null };
+}
+function ceStatsAdjusted(rows) {
+  const pass = rows.filter(r => r.result === 'Pass').length;
+  const adjFails = rows.filter(r => r.result === 'Fail' && !isExcludedCETopic(r.ceTopic)).length;
+  const total = pass + adjFails;
+  return { pass, fail: adjFails, total, ce: total > 0 ? (pass / total * 100) : null };
+}
+function ceClass(ce) {
+  if (ce === null) return '';
+  if (ce >= 97) return 'ce-good';
+  if (ce >= 90) return 'ce-warn';
+  return 'ce-bad';
+}
+function fmtCE(ce) { return ce === null ? '—' : ce.toFixed(2) + '%'; }
+function barColorCE(ce) {
+  if (ce === null) return 'var(--text-muted)';
+  if (ce >= 97) return 'var(--green)';
+  if (ce >= 90) return 'var(--orange)';
+  return 'var(--red)';
+}
+function ceCellHTML(ce) {
+  if (ce === null) return '<span class="na-text">No data</span>';
+  return `<span class="bar-track"><span class="bar-fill" style="width:${Math.max(0,Math.min(100,ce))}%;background:${barColorCE(ce)}"></span></span><span class="ce-pill ${ceClass(ce)}">${fmtCE(ce)}</span>`;
+}
+
+function renderCEBreakdown() {
+  // Uses `filteredRows` — the exact same filtered dataset the Dashboard view uses,
+  // so every dropdown (Month, Year, Party, Channel, Skill/LOB, Result, Tenure, Search)
+  // also applies here automatically.
+  const rows = filteredRows || [];
+  renderKPIsCE(rows);
+  renderLOBTableCE(rows);
+  renderAdjTableCE(rows);
+  renderTopicTableCE(rows);
+  const l2 = document.getElementById('lastRefresh2');
+  if (l2) l2.textContent = document.getElementById('lastRefresh') ? document.getElementById('lastRefresh').textContent : '';
+}
+
+// Keeps the CE Breakdown view in sync every time filters change or fresh data loads,
+// so switching to it never shows stale numbers.
+function syncCEBreakdown() {
+  renderCEBreakdown();
+}
+
+function renderKPIsCE(rows) {
+  const gp = rows.filter(r => r.party === 'GP');
+  const gx = rows.filter(r => r.party === 'GENEX');
+  const overall = ceStats(rows);
+  const gpCE = ceStats(gp);
+  const gxCE = ceStats(gx);
+  const overallAdj = ceStatsAdjusted(rows);
+
+  const cards = [
+    { label: 'Overall CE%', value: fmtCE(overall.ce), sub: `${overall.pass} pass / ${overall.total} total`, color: 'c-blue' },
+    { label: 'GP CE%', value: fmtCE(gpCE.ce), sub: `${gpCE.pass} pass / ${gpCE.total} total`, color: 'c-purple' },
+    { label: 'GENEX CE%', value: fmtCE(gxCE.ce), sub: `${gxCE.pass} pass / ${gxCE.total} total`, color: 'c-orange' },
+    { label: 'Adjusted CE% (overall)', value: fmtCE(overallAdj.ce), sub: 'Excl. Improper Response & No Response', color: 'c-green' },
+  ];
+  document.getElementById('kpiGridCE').innerHTML = cards.map(c => `
+    <div class="kpi-card ${c.color}">
+      <div class="kpi-label">${c.label}</div>
+      <div class="kpi-value">${c.value}</div>
+      <div class="kpi-sub">${c.sub}</div>
+    </div>
+  `).join('');
+}
+
+function renderLOBTableCE(rows) {
+  const rowsHTML = CE_LOB_DEFS.map(def => {
+    const lobRows = rows.filter(r => lobOf(r) === def.key);
+    const gp = lobRows.filter(r => r.party === 'GP');
+    const gx = lobRows.filter(r => r.party === 'GENEX');
+    const all = ceStats(lobRows), gpS = ceStats(gp), gxS = ceStats(gx);
+    return `<tr>
+      <td><div class="lob-name">${def.label}</div><div class="lob-sub">${all.total} audits</div></td>
+      <td class="num">${gpS.total}</td>
+      <td>${ceCellHTML(gpS.ce)}</td>
+      <td class="num">${gxS.total}</td>
+      <td>${ceCellHTML(gxS.ce)}</td>
+      <td class="num">${all.total}</td>
+      <td>${ceCellHTML(all.ce)}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('lobTableCE').innerHTML = `
+    <thead><tr><th>LOB</th><th>GP Audits</th><th>GP CE%</th><th>GENEX Audits</th><th>GENEX CE%</th><th>Total Audits</th><th>Overall CE%</th></tr></thead>
+    <tbody>${rowsHTML}</tbody>`;
+}
+
+function renderAdjTableCE(rows) {
+  const rowsHTML = CE_LOB_DEFS.map(def => {
+    const lobRows = rows.filter(r => lobOf(r) === def.key);
+    const raw = ceStats(lobRows);
+    const adj = ceStatsAdjusted(lobRows);
+    const delta = (raw.ce !== null && adj.ce !== null) ? (adj.ce - raw.ce) : null;
+    return `<tr>
+      <td><div class="lob-name">${def.label}</div><div class="lob-sub">${def.hasTopic ? 'Topic data available' : 'No topic column — shown as-is'}</div></td>
+      <td>${ceCellHTML(raw.ce)}</td>
+      <td>${ceCellHTML(adj.ce)}</td>
+      <td class="num">${delta === null ? '—' : (delta >= 0 ? '+' : '') + delta.toFixed(2) + ' pts'}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('adjTableCE').innerHTML = `
+    <thead><tr><th>LOB</th><th>Unadjusted CE%</th><th>Adjusted CE%</th><th>Δ Improvement</th></tr></thead>
+    <tbody>${rowsHTML}</tbody>`;
+}
+
+function renderTopicTableCE(rows) {
+  const topicLOBs = CE_LOB_DEFS.filter(d => d.hasTopic);
+  const blocks = topicLOBs.map(def => {
+    const fails = rows.filter(r => lobOf(r) === def.key && r.result === 'Fail');
+    const counts = {};
+    fails.forEach(r => {
+      const t = r.ceTopic || 'Uncategorized / Blank';
+      counts[t] = (counts[t] || 0) + 1;
+    });
+    const total = fails.length;
+    const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0, 8);
+    if (!sorted.length) {
+      return `<tr><td><div class="lob-name">${def.label}</div></td><td colspan="3" class="na-text">No fail records in current filter</td></tr>`;
+    }
+    return sorted.map(([topic, count], i) => `<tr>
+      <td>${i === 0 ? `<div class="lob-name">${def.label}</div><div class="lob-sub">${total} total fails</div>` : ''}</td>
+      <td>${isExcludedCETopic(topic) ? `<span class="ce-pill ce-warn">${topic}</span>` : topic}</td>
+      <td class="num">${count}</td>
+      <td class="num">${total > 0 ? (count/total*100).toFixed(1) : '0.0'}%</td>
+    </tr>`).join('');
+  }).join('');
+  document.getElementById('topicTableCE').innerHTML = `
+    <thead><tr><th>LOB</th><th>CE Error Topic</th><th>Fail Count</th><th>% of LOB Fails</th></tr></thead>
+    <tbody>${blocks}</tbody>`;
+}
+
 async function fetchData(forceRefresh = false) {
   const btn = document.getElementById('refreshBtn');
+  const sideBtn = document.getElementById('sidebarRefreshBtn');
   btn.classList.add('spinning');
+  if (sideBtn) sideBtn.classList.add('spinning');
 
   // Use cache if available and not expired and not a forced refresh
   const now = Date.now();
@@ -1610,8 +1903,9 @@ async function fetchData(forceRefresh = false) {
     rawRows = dataCache.rows;
     loadedFiles = dataCache.files;
     applyFilters();
+    syncCEBreakdown();
     showMain();
-    btn.classList.remove('spinning');
+    btn.classList.remove('spinning'); if (sideBtn) sideBtn.classList.remove('spinning');
     showToast('✅ Data loaded from cache', 'success');
     return;
   }
@@ -1625,8 +1919,8 @@ async function fetchData(forceRefresh = false) {
     if (!allFiles.length) {
       showToast('⚠️ No data files found in data/ folder yet.', 'error');
       rawRows = []; loadedFiles = [];
-      applyFilters(); showMain();
-      btn.classList.remove('spinning');
+      applyFilters(); syncCEBreakdown(); showMain();
+      btn.classList.remove('spinning'); if (sideBtn) sideBtn.classList.remove('spinning');
       return;
     }
 
@@ -1695,8 +1989,9 @@ async function fetchData(forceRefresh = false) {
   }
 
   applyFilters();
+  syncCEBreakdown();
   showMain();
-  btn.classList.remove('spinning');
+  btn.classList.remove('spinning'); if (sideBtn) sideBtn.classList.remove('spinning');
 }
 
 function setLoaderProgress(pct, text) {
@@ -1971,6 +2266,7 @@ function applyFilters() {
   updateLeaderboards();
   renderTenureContribution();
   renderTable();
+  syncCEBreakdown();
 }
 
 // ═══════════════════════════════════════════
@@ -2896,16 +3192,19 @@ function startCountdown() {
   if (countdownInterval) clearInterval(countdownInterval);
   countdownInterval = setInterval(() => {
     const remaining = nextRefreshAt - Date.now();
+    const sideEl = document.getElementById('nextRefreshCountdownSidebar');
     if (remaining <= 0) {
       document.getElementById('nextRefreshCountdown').textContent = 'Refreshing…';
+      if (sideEl) sideEl.textContent = 'Refreshing…';
       return;
     }
     const h = Math.floor(remaining / 3600000);
     const m = Math.floor((remaining % 3600000) / 60000);
     const s = Math.floor((remaining % 60000) / 1000);
     const pad = n => String(n).padStart(2, '0');
-    document.getElementById('nextRefreshCountdown').textContent =
-      `Next refresh in ${pad(h)}:${pad(m)}:${pad(s)}`;
+    const label = `Next refresh in ${pad(h)}:${pad(m)}:${pad(s)}`;
+    document.getElementById('nextRefreshCountdown').textContent = label;
+    if (sideEl) sideEl.textContent = label;
   }, 1000);
 }
 
