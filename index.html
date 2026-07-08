@@ -1569,25 +1569,130 @@ function parseRows(grid, map, channel, fileMonth, fileYear, defaultParty) {
 // ═══════════════════════════════════════════
 //  CM ROW PARSER (Complaint Management)
 // ═══════════════════════════════════════════
+//
+// CM monthly export layouts drift from month to month (columns get added,
+// removed, or renamed slightly between dumps — e.g. May's file has 3 fewer
+// columns than Jan's because it lacks the "9.0 Ticket ID" group, and its
+// "party" column is literally out of range under the old fixed indices).
+// Rather than hard-coding column numbers per month, we resolve every column
+// by its header text (or, for the numbered QA sub-criteria, by its leading
+// code like "1.1"/"4.4") against THIS file's own header row. The old
+// hard-coded map is kept only as a last-resort fallback if a column can't
+// be found by name at all.
+const CM_EMP_CODES = {
+  'Proactive Greeting': '1.1',
+  'Complaint Ack & Clarification': '1.2',
+  'Speech Clarity': '1.3',
+  'Proper Listening': '1.4',
+  'Time/Hold Mgt': '1.5',
+  'Personalization': '1.6',
+  'Emotional Tone': '1.7',
+  'Closing Courtesy': '1.8'
+};
+const CM_CE_CODES = {
+  'Identification': '2.1',
+  'Information': '2.2',
+  'Execution': '2.3',
+  'Misbehave': '3.1',
+  'Improper Response': '3.2',
+  'Unnecessary Hold': '3.3',
+  'Unusual Hangup': '3.4',
+  'Unauth Execution': '4.1',
+  'Unauth Info Shared': '4.2',
+  'Verification Not Followed': '4.3',
+  'Access Sharing': '4.4',
+  'CC Product': '5.1',
+  'CC Process': '5.2',
+  'CC Information': '5.3',
+  'CC System': '5.4',
+  'Sys/Tool Performance': '5.5'
+};
+
+function findColByNames(header, names) {
+  for (const name of names) {
+    const idx = header.findIndex(h => String(h || '').trim().toLowerCase() === name.toLowerCase());
+    if (idx >= 0) return idx;
+  }
+  return null;
+}
+function findColByCode(header, code) {
+  const idx = header.findIndex(h => {
+    const s = String(h || '').trim();
+    return s === code || s.startsWith(code + ' ');
+  });
+  return idx >= 0 ? idx : null;
+}
+function buildCMColumnMap(header) {
+  const map = {
+    agentId: findColByNames(header, ['Evaluatee NT Login']),
+    tl: findColByNames(header, ['Team Leader']),
+    party: findColByNames(header, ['Audit Party', 'Audior Type']),
+    empPass: findColByNames(header, ['Total Emp Parameter Pass Count']),
+    empFail: findColByNames(header, ['Total Emp Parameter Fail Count']),
+    cePass: findColByNames(header, ['Pass']),
+    ceFail: findColByNames(header, ['Fail']),
+    rtcPass: findColByNames(header, ['RTC Pass']),
+    rtcFail: findColByNames(header, ['RTC Fail']),
+    emp: {}, ce: {}
+  };
+  Object.entries(CM_EMP_CODES).forEach(([label, code]) => { map.emp[label] = findColByCode(header, code); });
+  Object.entries(CM_CE_CODES).forEach(([label, code]) => { map.ce[label] = findColByCode(header, code); });
+  return map;
+}
+// CM agent NT logins are always prefixed with the auditing party ("genex.xxx"
+// or "gp.xxx"). Some monthly dumps (e.g. Jan 2026) ship an entirely blank
+// party/"Audior Type" column, so this is used as a fallback when the party
+// column itself has no value for a row.
+function partyFromAgentId(agentId) {
+  const v = String(agentId || '').trim().toLowerCase();
+  if (v.startsWith('genex')) return 'GENEX';
+  if (v.startsWith('gp')) return 'GP';
+  return null;
+}
+
 function parseCMRows(grid, map, fileMonth, fileYear) {
   const rows = [];
   const header = grid[0] || [];
+  const dyn = buildCMColumnMap(header);
+
+  // Prefer the column found dynamically by name/code in THIS file's header;
+  // fall back to the static (legacy) index only if nothing was found by name.
+  const pick = (dynVal, staticVal) => (dynVal !== null && dynVal !== undefined) ? dynVal : (staticVal ?? null);
+  const rmap = {
+    agentId: pick(dyn.agentId, map.agentId),
+    tl: pick(dyn.tl, map.tl),
+    party: pick(dyn.party, map.party),
+    empPass: pick(dyn.empPass, map.empPass),
+    empFail: pick(dyn.empFail, map.empFail),
+    cePass: pick(dyn.cePass, map.cePass),
+    ceFail: pick(dyn.ceFail, map.ceFail),
+    rtcPass: pick(dyn.rtcPass, map.rtcPass),
+    rtcFail: pick(dyn.rtcFail, map.rtcFail),
+    emp: {}, ce: {}
+  };
+  const empKeys = new Set([...Object.keys(map.emp || {}), ...Object.keys(dyn.emp)]);
+  empKeys.forEach(k => { rmap.emp[k] = pick(dyn.emp[k], (map.emp || {})[k]); });
+  const ceKeys = new Set([...Object.keys(map.ce || {}), ...Object.keys(dyn.ce)]);
+  ceKeys.forEach(k => { rmap.ce[k] = pick(dyn.ce[k], (map.ce || {})[k]); });
 
   // Compute min required col
-  const minCol = Math.max(map.agentId, map.empPass, map.empFail, map.cePass, map.ceFail, map.rtcPass, map.rtcFail);
+  const minCol = Math.max(rmap.agentId || 0, rmap.empPass || 0, rmap.empFail || 0, rmap.cePass || 0, rmap.ceFail || 0, rmap.rtcPass || 0, rmap.rtcFail || 0);
 
   for (let i = 1; i < grid.length; i++) {
     const row = grid[i];
     if (!row || row.length < minCol) continue;
 
-    const agentId = String(row[map.agentId] || '').trim();
+    const agentId = String(row[rmap.agentId] || '').trim();
     if (!agentId) continue;
 
-    // Party from HC col
+    // Party: read from the resolved column; if blank (some monthly exports
+    // ship this column empty), fall back to the genex./gp. prefix on the
+    // agent's NT login.
     let party = null;
-    if (map.party !== null && map.party < row.length) {
-      party = normalizeParty(String(row[map.party] || ''));
+    if (rmap.party !== null && rmap.party !== undefined && rmap.party < row.length) {
+      party = normalizeParty(String(row[rmap.party] || ''));
     }
+    if (!party) party = partyFromAgentId(agentId);
     if (!party) continue;
 
     // Month from date col A(0)
@@ -1596,23 +1701,23 @@ function parseCMRows(grid, map, fileMonth, fileYear) {
     if (!month) continue;
     if (fileMonth && month.toLowerCase() !== fileMonth.toLowerCase()) continue;
 
-    const empPass = Number(row[map.empPass]) || 0;
-    const empFail = Number(row[map.empFail]) || 0;
-    const cePassC = Number(row[map.cePass])  || 0;
-    const ceFailC = Number(row[map.ceFail])  || 0;
-    const rtcPass = Number(row[map.rtcPass]) || 0;
-    const rtcFail = Number(row[map.rtcFail]) || 0;
+    const empPass = Number(row[rmap.empPass]) || 0;
+    const empFail = Number(row[rmap.empFail]) || 0;
+    const cePassC = Number(row[rmap.cePass])  || 0;
+    const ceFailC = Number(row[rmap.ceFail])  || 0;
+    const rtcPass = Number(row[rmap.rtcPass]) || 0;
+    const rtcFail = Number(row[rmap.rtcFail]) || 0;
 
     // Derive overall result from CE: if ceFailCount > 0 → Fail, else Pass
     const result = ceFailC > 0 ? 'Fail' : 'Pass';
 
     const ceParams = {}, empParams = {};
-    Object.entries(map.ce).forEach(([k, ci]) => {
-      const v = ci < row.length ? String(row[ci] || '').trim().toLowerCase() : '';
+    Object.entries(rmap.ce).forEach(([k, ci]) => {
+      const v = (ci !== null && ci !== undefined && ci < row.length) ? String(row[ci] || '').trim().toLowerCase() : '';
       ceParams[k] = v === 'pass' ? 'Pass' : v === 'fail' ? 'Fail' : null;
     });
-    Object.entries(map.emp).forEach(([k, ci]) => {
-      const v = ci < row.length ? String(row[ci] || '').trim().toLowerCase() : '';
+    Object.entries(rmap.emp).forEach(([k, ci]) => {
+      const v = (ci !== null && ci !== undefined && ci < row.length) ? String(row[ci] || '').trim().toLowerCase() : '';
       empParams[k] = v === 'pass' ? 'Pass' : v === 'fail' ? 'Fail' : null;
     });
 
@@ -1621,7 +1726,7 @@ function parseCMRows(grid, map, fileMonth, fileYear) {
       skill: 'Complaint Management',
       channel: 'Inbound',
       agentId,
-      tl: map.tl < row.length ? String(row[map.tl] || '').trim() : '',
+      tl: (rmap.tl !== null && rmap.tl !== undefined && rmap.tl < row.length) ? String(row[rmap.tl] || '').trim() : '',
       qa: 'N/A', // No QA data for CM
       tenure: null, // No tenure for CM
       result,
